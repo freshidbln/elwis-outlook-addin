@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Elwis für Outlook – Demo-Manifest
+  Basis-URL: https://fivebln.github.io/elwis-outlook-addin/
+  Für eine andere Hosting-Adresse alle Vorkommen dieser URL ersetzen.
+-->
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+           xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.0"
+           xsi:type="MailApp">
+  <Id>79df1cf2-f067-4b8c-b8bb-41934c8eec18</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>fresh id</ProviderName>
+  <DefaultLocale>de-DE</DefaultLocale>
+  <DisplayName DefaultValue="Elwis (Demo)"/>
+  <Description DefaultValue="Zeigt zur geöffneten E-Mail passende Kontakte, Kunden und Vorgänge aus dem Elwis ERP. Demo-Version mit Beispieldaten."/>
+  <IconUrl DefaultValue="https://fivebln.github.io/elwis-outlook-addin/assets/icon-64.png"/>
+  <HighResolutionIconUrl DefaultValue="https://fivebln.github.io/elwis-outlook-addin/assets/icon-128.png"/>
+  <SupportUrl DefaultValue="https://fivebln.github.io/elwis-outlook-addin/"/>
+  <AppDomains>
+    <AppDomain>https://freshid.elwis.cloud</AppDomain>
+  </AppDomains>
+  <Hosts>
+    <Host Name="Mailbox"/>
+  </Hosts>
+  <Requirements>
+    <Sets>
+      <Set Name="Mailbox" MinVersion="1.5"/>
+    </Sets>
+  </Requirements>
+  <FormSettings>
+    <Form xsi:type="ItemRead">
+      <DesktopSettings>
+        <SourceLocation DefaultValue="https://fivebln.github.io/elwis-outlook-addin/taskpane.html"/>
+        <RequestedHeight>450</RequestedHeight>
+      </DesktopSettings>
+    </Form>
+  </FormSettings>
+  <Permissions>ReadItem</Permissions>
+  <Rule xsi:type="RuleCollection" Mode="Or">
+    <Rule xsi:type="ItemIs" ItemType="Message" FormType="Read"/>
+  </Rule>
+  <DisableEntityHighlighting>false</DisableEntityHighlighting>
+
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides/1.1" xsi:type="VersionOverridesV1_1">
+      <Requirements>
+        <bt:Sets DefaultMinVersion="1.5">
+          <bt:Set Name="Mailbox"/>
+        </bt:Sets>
+      </Requirements>
+      <Hosts>
+        <Host xsi:type="MailHost">
+          <DesktopFormFactor>
+            <FunctionFile resid="Commands.Url"/>
+
+            <!-- Lesen: E-Mail geöffnet -->
+            <ExtensionPoint xsi:type="MessageReadCommandSurface">
+              <OfficeTab id="TabDefault">
+                <Group id="elwisReadGroup">
+                  <Label resid="Group.Label"/>
+                  <Control xsi:type="Button" id="elwisReadButton">
+                    <Label resid="Button.Label"/>
+                    <Supertip>
+                      <Title resid="Button.Label"/>
+                      <Description resid="Button.Tooltip"/>
+                    </Supertip>
+                    <Icon>
+                      <bt:Image size="16" resid="Icon.16"/>
+                      <bt:Image size="32" resid="Icon.32"/>
+                      <bt:Image size="80" resid="Icon.80"/>
+                    </Icon>
+                    <Action xsi:type="ShowTaskpane">
+                      <SourceLocation resid="Taskpane.Url"/>
+                      <SupportsPinning>true</SupportsPinning>
+                    </Action>
+                  </Control>
+                </Group>
+              </OfficeTab>
+            </ExtensionPoint>
+
+            <!-- Verfassen: neue E-Mail / Antwort -->
+            <ExtensionPoint xsi:type="MessageComposeCommandSurface">
+              <OfficeTab id="TabDefault">
+                <Group id="elwisComposeGroup">
+                  <Label resid="Group.Label"/>
+                  <Control xsi:type="Button" id="elwisComposeButton">
+                    <Label resid="Button.Label"/>
+                    <Supertip>
+                      <Title resid="Button.Label"/>
+                      <Description resid="Button.Tooltip"/>
+                    </Supertip>
+                    <Icon>
+                      <bt:Image size="16" resid="Icon.16"/>
+                      <bt:Image size="32" resid="Icon.32"/>
+                      <bt:Image size="80" resid="Icon.80"/>
+                    </Icon>
+                    <Action xsi:type="ShowTaskpane">
+                      <SourceLocation resid="Taskpane.Url"/>
+                      <SupportsPinning>true</SupportsPinning>
+                    </Action>
+                  </Control>
+                </Group>
+              </OfficeTab>
+            </ExtensionPoint>
+          </DesktopFormFactor>
+        </Host>
+      </Hosts>
+      <Resources>
+        <bt:Images>
+          <bt:Image id="Icon.16" DefaultValue="https://fivebln.github.io/elwis-outlook-addin/assets/icon-16.png"/>
+          <bt:Image id="Icon.32" DefaultValue="https://fivebln.github.io/elwis-outlook-addin/assets/icon-32.png"/>
+          <bt:Image id="Icon.80" DefaultValue="https://fivebln.github.io/elwis-outlook-addin/assets/icon-80.png"/>
+        </bt:Images>
+        <bt:Urls>
+          <bt:Url id="Commands.Url" DefaultValue="https://fivebln.github.io/elwis-outlook-addin/commands.html"/>
+          <bt:Url id="Taskpane.Url" DefaultValue="https://fivebln.github.io/elwis-outlook-addin/taskpane.html"/>
+        </bt:Urls>
+        <bt:ShortStrings>
+          <bt:String id="Group.Label" DefaultValue="Elwis ERP"/>
+          <bt:String id="Button.Label" DefaultValue="Elwis"/>
+        </bt:ShortStrings>
+        <bt:LongStrings>
+          <bt:String id="Button.Tooltip" DefaultValue="Kontakt, Kunde und Vorgänge zu dieser E-Mail in Elwis anzeigen."/>
+        </bt:LongStrings>
+      </Resources>
+    </VersionOverrides>
+  </VersionOverrides>
+</OfficeApp>

@@ -1,0 +1,9 @@
+{
+  "name": "elwis-outlook-addin-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Read-only Vermittlungs-Backend zwischen Outlook-Add-in und Elwis ERP",
+  "engines": { "node": ">=20" },
+  "scripts": { "start": "node server.js" }
+}

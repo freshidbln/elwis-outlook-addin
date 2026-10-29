@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Elwis für Outlook</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <link rel="stylesheet" href="src/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <img class="logo" src="assets/icon-32.png" alt="">
+    <div class="brand">
+      <span class="brand-name">Elwis</span>
+      <span class="brand-sub">fresh id ERP</span>
+    </div>
+    <span id="modeBadge" class="mode-badge">Demo</span>
+    <button id="refreshBtn" class="icon-btn" title="Neu laden" aria-label="Neu laden">
+      <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M10 3a7 7 0 0 1 6.32 4H14a.75.75 0 0 0 0 1.5h3.75A.75.75 0 0 0 18.5 7.75V4a.75.75 0 0 0-1.5 0v1.6A8.5 8.5 0 1 0 18.4 11a.75.75 0 1 0-1.48-.25A7 7 0 1 1 10 3Z"/></svg>
+    </button>
+  </header>
+
+  <div class="searchbar">
+    <svg class="search-ico" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8.5 3a5.5 5.5 0 0 1 4.38 8.82l3.65 3.65a.75.75 0 1 1-1.06 1.06l-3.65-3.65A5.5 5.5 0 1 1 8.5 3Zm0 1.5a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/></svg>
+    <input id="search" type="search" placeholder="Kunde, Projekt (PID) oder Belegnummer" autocomplete="off" aria-label="In Elwis suchen">
+  </div>
+
+  <div id="simulator" class="simulator" hidden>
+    <label for="simSelect">Vorschau ohne Outlook – Beispiel-E-Mail:</label>
+    <select id="simSelect"></select>
+  </div>
+
+  <main id="view" aria-live="polite"></main>
+
+  <div id="sheetBackdrop" class="sheet-backdrop" hidden></div>
+  <section id="sheet" class="sheet" hidden role="dialog" aria-modal="true">
+    <div class="sheet-head">
+      <button id="sheetBack" class="icon-btn" aria-label="Zurück">
+        <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M12.27 4.2a.75.75 0 0 1 .03 1.06L7.83 10l4.47 4.74a.75.75 0 1 1-1.1 1.02l-4.95-5.25a.75.75 0 0 1 0-1.02l4.95-5.25a.75.75 0 0 1 1.07-.04Z"/></svg>
+      </button>
+      <div id="sheetTitle" class="sheet-title"></div>
+    </div>
+    <div id="sheetBody" class="sheet-body"></div>
+  </section>
+
+  <div id="toast" class="toast" hidden role="status"></div>
+
+  <footer class="foot">
+    <span id="footText">Demo-Version · Beispieldaten, kein Zugriff auf Elwis</span>
+  </footer>
+
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
