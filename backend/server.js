@@ -1,5 +1,5 @@
 // Backend für „Elwis für Outlook“ – Stufe 1 (nur lesend).
-// Start:  ELWIS_BASE_URL=https://freshid.elwis.cloud ALLOWED_ORIGIN=https://fivebln.github.io node server.js
+// Start:  ELWIS_BASE_URL=https://freshid.elwis.cloud ALLOWED_ORIGIN=https://freshidbln.github.io node server.js
 // Läuft mit Node 20+ ohne weitere Abhängigkeiten; lässt sich 1:1 in Azure App Service,
 // einen Container oder (mit kleinem Adapter) Azure Functions übernehmen.
 //
@@ -15,7 +15,7 @@ import { Model, MAP } from './model.js';
 
 const PORT = process.env.PORT || 8787;
 const BASE = process.env.ELWIS_BASE_URL || 'https://freshid.elwis.cloud';
-const ORIGIN = process.env.ALLOWED_ORIGIN || 'https://fivebln.github.io';
+const ORIGIN = process.env.ALLOWED_ORIGIN || 'https://freshidbln.github.io';
 const SESSION_HOURS = 8;
 const PID = /\bPID[-\s]?(\d{3,6})[-\s]?(NBG|HKG)\b/i;
 

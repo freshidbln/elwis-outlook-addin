@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   Elwis für Outlook – Demo-Manifest
-  Basis-URL: https://fivebln.github.io/elwis-outlook-addin/
+  Basis-URL: https://freshidbln.github.io/elwis-outlook-addin/
   Für eine andere Hosting-Adresse alle Vorkommen dieser URL ersetzen.
 -->
 <OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
@@ -15,9 +15,9 @@
   <DefaultLocale>de-DE</DefaultLocale>
   <DisplayName DefaultValue="Elwis (Demo)"/>
   <Description DefaultValue="Zeigt zur geöffneten E-Mail passende Kontakte, Kunden und Vorgänge aus dem Elwis ERP. Demo-Version mit Beispieldaten."/>
-  <IconUrl DefaultValue="https://fivebln.github.io/elwis-outlook-addin/assets/icon-64.png"/>
-  <HighResolutionIconUrl DefaultValue="https://fivebln.github.io/elwis-outlook-addin/assets/icon-128.png"/>
-  <SupportUrl DefaultValue="https://fivebln.github.io/elwis-outlook-addin/"/>
+  <IconUrl DefaultValue="https://freshidbln.github.io/elwis-outlook-addin/assets/icon-64.png"/>
+  <HighResolutionIconUrl DefaultValue="https://freshidbln.github.io/elwis-outlook-addin/assets/icon-128.png"/>
+  <SupportUrl DefaultValue="https://freshidbln.github.io/elwis-outlook-addin/"/>
   <AppDomains>
     <AppDomain>https://freshid.elwis.cloud</AppDomain>
   </AppDomains>
@@ -32,7 +32,7 @@
   <FormSettings>
     <Form xsi:type="ItemRead">
       <DesktopSettings>
-        <SourceLocation DefaultValue="https://fivebln.github.io/elwis-outlook-addin/taskpane.html"/>
+        <SourceLocation DefaultValue="https://freshidbln.github.io/elwis-outlook-addin/taskpane.html"/>
         <RequestedHeight>450</RequestedHeight>
       </DesktopSettings>
     </Form>
@@ -109,13 +109,13 @@
       </Hosts>
       <Resources>
         <bt:Images>
-          <bt:Image id="Icon.16" DefaultValue="https://fivebln.github.io/elwis-outlook-addin/assets/icon-16.png"/>
-          <bt:Image id="Icon.32" DefaultValue="https://fivebln.github.io/elwis-outlook-addin/assets/icon-32.png"/>
-          <bt:Image id="Icon.80" DefaultValue="https://fivebln.github.io/elwis-outlook-addin/assets/icon-80.png"/>
+          <bt:Image id="Icon.16" DefaultValue="https://freshidbln.github.io/elwis-outlook-addin/assets/icon-16.png"/>
+          <bt:Image id="Icon.32" DefaultValue="https://freshidbln.github.io/elwis-outlook-addin/assets/icon-32.png"/>
+          <bt:Image id="Icon.80" DefaultValue="https://freshidbln.github.io/elwis-outlook-addin/assets/icon-80.png"/>
         </bt:Images>
         <bt:Urls>
-          <bt:Url id="Commands.Url" DefaultValue="https://fivebln.github.io/elwis-outlook-addin/commands.html"/>
-          <bt:Url id="Taskpane.Url" DefaultValue="https://fivebln.github.io/elwis-outlook-addin/taskpane.html"/>
+          <bt:Url id="Commands.Url" DefaultValue="https://freshidbln.github.io/elwis-outlook-addin/commands.html"/>
+          <bt:Url id="Taskpane.Url" DefaultValue="https://freshidbln.github.io/elwis-outlook-addin/taskpane.html"/>
         </bt:Urls>
         <bt:ShortStrings>
           <bt:String id="Group.Label" DefaultValue="Elwis ERP"/>

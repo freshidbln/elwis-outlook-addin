@@ -11,7 +11,7 @@ zeigen die geplante Stufe 2, speichern aber nichts.
 
 ## Vorschau im Browser
 
-https://fivebln.github.io/elwis-outlook-addin/taskpane.html – oben lässt sich eine Beispiel-E-Mail wählen.
+https://freshidbln.github.io/elwis-outlook-addin/taskpane.html – oben lässt sich eine Beispiel-E-Mail wählen.
 
 ## Installation im neuen Outlook (ohne Admin)
 
@@ -19,7 +19,7 @@ https://fivebln.github.io/elwis-outlook-addin/taskpane.html – oben lässt sich
 2. Links **Meine Add-ins** wählen, ganz unten bei **Benutzerdefinierte Add-ins** auf
    **+ Benutzerdefiniertes Add-in hinzufügen** klicken.
 3. **Aus URL hinzufügen** und diese Adresse eintragen:
-   `https://fivebln.github.io/elwis-outlook-addin/manifest.xml`
+   `https://freshidbln.github.io/elwis-outlook-addin/manifest.xml`
    (alternativ **Aus Datei hinzufügen** mit der heruntergeladenen `manifest.xml`).
 4. Warnhinweis bestätigen. Das Add-in erscheint nach kurzer Zeit auch im neuen Outlook für Windows.
 5. Eine E-Mail öffnen → in der Leiste über der E-Mail **Apps** (bzw. „…“) → **Elwis**.
