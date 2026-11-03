@@ -36,6 +36,5 @@ export const CONFIG = {
     }
   },
 
-  // Projektnummer im Betreff, z. B. „PID-3173-NBG“
-  pidPattern: /\bPID[-\s]?(\d{3,6})[-\s]?(NBG|HKG)\b/i
+  // Erkennung von PID-, SC- und Belegnummern: siehe src/refs.js
 };

@@ -145,6 +145,12 @@ function renderHome() {
 }
 
 function renderFocus(focus) {
+  if (focus.order) {
+    return `<div class="card focus"><div class="card-label">Im Betreff erkannt <span class="chip">${esc(focus.matchedBy)}</span></div>
+      <div class="title-row"><div class="title">${esc(focus.order.name)}</div><span class="chip office">${esc(focus.order.office || '')}</span></div>
+      <div class="subtitle">${esc(focus.order.company || '')} · Auftragswert ${money(focus.order.amount, focus.order.currency)}</div></div>`
+      + renderOrderCards({ orders: [focus.order] });
+  }
   if (!focus.project) {
     return `<div class="card focus"><div class="card-label">Im Betreff erkannt <span class="chip">${esc(focus.matchedBy)}</span></div>
       <div class="subtitle">Zu dieser Nummer wurde in Elwis kein Vorgang gefunden.</div></div>`;
@@ -388,7 +394,7 @@ function renderOrderCards(p) {
         <div class="title" style="font-size:13px">${esc(o.name)}</div>
         <span class="oc-phase" style="background:${ph.color}" title="${esc(ph.label)}">${esc(ph.short)}</span>
       </div>
-      <div class="subtitle">SC ${esc(o.sc || '–')} · Auftrag ${esc(o.number || '')} · PM ${esc(o.pm || '–')}</div>
+      <div class="subtitle">SC ${esc(o.sc || '–')}${o.number ? ' · Auftrag ' + esc(o.number) : ''} · PM ${esc(o.pm || '–')}</div>
       <div class="oc-grid">${ENUM_KEYS.map(tile).join('')}</div>
       <div class="mini-title" style="margin-top:10px">Termine</div>
       <div class="oc-dates">${DATE_KEYS.map(tile).join('')}</div>
@@ -421,7 +427,7 @@ function refreshViews() {
 }
 
 function openBoard() {
-  const url = new URL('board.html?v=1.2.0', location.href).toString();
+  const url = new URL('board.html?v=1.3.0', location.href).toString();
   if (state.inOutlook && Office.context.ui?.displayDialogAsync) {
     Office.context.ui.displayDialogAsync(url, { height: 90, width: 90, promptBeforeOpen: false }, (res) => {
       if (res.status !== Office.AsyncResultStatus.Succeeded) window.open(url, '_blank');

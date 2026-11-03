@@ -41,7 +41,7 @@ export const contacts = [
 // Projekte = Anfragen (Inquiry) mit allen nachgelagerten Vorgängen
 export const projects = [
   {
-    id: 'p1', kind: 'inquiry', office: 'NBG', pid: 'PID-3201-NBG', folder: 'https://freshidproducts.sharepoint.com/sites/Nuremberg/Projects', name: 'Sommer-Display Kühlschrankaufsteller',
+    id: 'p1', kind: 'inquiry', office: 'NBG', pid: 'PID-3201-NBG', folder: 'https://freshidproducts.sharepoint.com/sites/Nuremberg/Projects/idNBGCurrent/Forms/AllItems.aspx', name: 'Sommer-Display Kühlschrankaufsteller',
     companyId: 'c1', contactId: 'k1', status: 2, received: d(-48), deadline: d(-35), amount: 24500, currency: 'EUR',
     brand: 'Nordlicht Pils', category: 'Metal', priority: 1, closingChance: 1, projectLead: STAFF.anna, team: [STAFF.anna, STAFF.tom],
     samples: [{ id: 's1', kind: 'sample', name: 'Sommer-Display – Muster 1', status: 2, date: d(-42), deadline: d(-30), amount: 380 }],
@@ -56,7 +56,7 @@ export const projects = [
     ]
   },
   {
-    id: 'p2', kind: 'inquiry', office: 'NBG', pid: 'PID-3215-NBG', folder: 'https://freshidproducts.sharepoint.com/sites/Nuremberg/Projects', name: 'Weihnachts-Geschenkset 2026',
+    id: 'p2', kind: 'inquiry', office: 'NBG', pid: 'PID-3215-NBG', folder: 'https://freshidproducts.sharepoint.com/sites/Nuremberg/Projects/idNBGCurrent/Forms/AllItems.aspx', name: 'Weihnachts-Geschenkset 2026',
     companyId: 'c1', contactId: 'k2', status: 1, received: d(-6), deadline: d(3), amount: 18000, currency: 'EUR',
     brand: 'Nordlicht Winterbock', category: 'Paper', priority: 2, closingChance: 2, projectLead: STAFF.anna, team: [STAFF.anna, STAFF.tom],
     samples: [{ id: 's2', kind: 'sample', name: 'Geschenkbox mit Inlay – Muster', status: 1, date: d(-4), deadline: d(9), amount: 220 }],
@@ -65,7 +65,7 @@ export const projects = [
     notes: [{ date: d(-5), author: STAFF.anna, text: 'Briefing erhalten: 2.000 Sets, Auslieferung Anfang Dezember.' }]
   },
   {
-    id: 'p3', kind: 'inquiry', office: 'NBG', pid: 'PID-3188-NBG', folder: 'https://freshidproducts.sharepoint.com/sites/Nuremberg/Projects', name: 'Thekenaufsteller Acryl',
+    id: 'p3', kind: 'inquiry', office: 'NBG', pid: 'PID-3188-NBG', folder: 'https://freshidproducts.sharepoint.com/sites/Nuremberg/Projects/idNBGCurrent/Forms/AllItems.aspx', name: 'Thekenaufsteller Acryl',
     companyId: 'c2', contactId: 'k3', status: 2, received: d(-25), deadline: d(-14), amount: 8940, currency: 'EUR',
     brand: 'Alpenkräuter Original', category: 'Plastic', priority: 2, closingChance: 1, projectLead: STAFF.jonas, team: [STAFF.jonas],
     samples: [],
@@ -75,7 +75,7 @@ export const projects = [
     notes: []
   },
   {
-    id: 'p4', kind: 'inquiry', office: 'NBG', pid: 'PID-3142-NBG', folder: 'https://freshidproducts.sharepoint.com/sites/Nuremberg/Projects', name: 'Neon-Leuchtschild Bar-Edition',
+    id: 'p4', kind: 'inquiry', office: 'NBG', pid: 'PID-3142-NBG', folder: 'https://freshidproducts.sharepoint.com/sites/Nuremberg/Projects/idNBGCurrent/Forms/AllItems.aspx', name: 'Neon-Leuchtschild Bar-Edition',
     companyId: 'c2', contactId: 'k3', status: 2, received: d(-110), deadline: d(-95), amount: 21400, currency: 'EUR',
     brand: 'Alpenkräuter Original', category: 'Electronic', priority: 1, closingChance: 1, projectLead: STAFF.jonas, team: [STAFF.jonas, STAFF.tom],
     samples: [{ id: 's4', kind: 'sample', name: 'Leuchtschild – Muster', status: 2, date: d(-100), deadline: d(-88), amount: 450 }],
@@ -90,7 +90,7 @@ export const projects = [
     notes: [{ date: d(-2), author: STAFF.tom, text: 'Zahlungserinnerung für 2026090318 vorbereitet.' }]
   },
   {
-    id: 'p5', kind: 'inquiry', office: 'NBG', pid: 'PID-3230-NBG', folder: 'https://freshidproducts.sharepoint.com/sites/Nuremberg/Projects', name: 'Pop-up Store Kit UK',
+    id: 'p5', kind: 'inquiry', office: 'NBG', pid: 'PID-3230-NBG', folder: 'https://freshidproducts.sharepoint.com/sites/Nuremberg/Projects/idNBGCurrent/Forms/AllItems.aspx', name: 'Pop-up Store Kit UK',
     companyId: 'c3', contactId: 'k4', status: 1, received: d(-2), deadline: d(12), amount: 12000, currency: 'GBP',
     brand: 'Harbour Lane', category: 'Wood', priority: 3, closingChance: 2, projectLead: STAFF.anna, team: [STAFF.anna],
     samples: [],
@@ -114,6 +114,8 @@ export const projects = [
 export const demoEmails = [
   { label: 'Lena Hartmann – Lieferdatum Sommer-Display', fromName: 'Lena Hartmann', fromEmail: 'lena.hartmann@nordlicht-getraenke.example',
     subject: 'AW: fresh id / PID-3201-NBG / Sommer-Display – Lieferdatum?', received: d(0) },
+  { label: 'Felix Brandt – Schreibweise wie im Alltag (PID ohne Büro + SC-Nr.)', fromName: 'Felix Brandt', fromEmail: 'f.brandt@nordlicht-getraenke.example',
+    subject: 'AW: Sommer-Display // 376901 // PID 3201', received: d(0) },
   { label: 'Markus Vogel – Zahlung Rechnung 2026090318', fromName: 'Markus Vogel', fromEmail: 'markus.vogel@alpenkraeuter.example',
     subject: 'Zahlung Rechnung 2026090318', received: d(0) },
   { label: 'Kevin Liu – Produktionsstand (HKG)', fromName: 'Kevin Liu', fromEmail: 'kevin.liu@brightpack.example',

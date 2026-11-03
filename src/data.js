@@ -9,6 +9,7 @@
 import { CONFIG } from './config.js';
 import { companies, contacts, projects, FOLDER_TEMPLATE, ORDER_PM, extraOrders } from './mock-data.js';
 import { applyChange, applyDateRules, todayIso } from './orders.js';
+import { parseRefs } from './refs.js';
 
 // ---------- Demo-Speicher für Auftragsstatus ----------
 // Live liegen die Werte an der Elwis Sales Order. In der Demo werden Änderungen im
@@ -48,8 +49,6 @@ export const demoOrders = {
   reset() { memPatches = {}; savePatches({}); }
 };
 
-const DOC_NUMBER = /\b(20\d{8})\b/g;
-
 function findDocByNumber(num) {
   for (const p of projects) {
     for (const list of [p.quotes, p.orders, p.invoices]) {
@@ -69,18 +68,27 @@ class MockProvider {
     const contact = contacts.find((c) => lower.includes(c.email.toLowerCase())) || null;
     const company = contact && contact.companyId ? companies.find((c) => c.id === contact.companyId) : null;
 
-    // Projektnummer oder Belegnummer im Betreff
+    // Projekt-, SC- oder Belegnummer im Betreff (Schreibweisen siehe refs.js)
     let focus = null;
-    const pidMatch = subject.match(CONFIG.pidPattern);
-    if (pidMatch) {
-      const pid = `PID-${pidMatch[1]}-${pidMatch[2].toUpperCase()}`;
-      const p = projects.find((x) => x.pid === pid);
-      focus = p ? { matchedBy: pid, project: p } : { matchedBy: pid, project: null };
-    } else {
-      for (const m of subject.matchAll(DOC_NUMBER)) {
-        const hit = findDocByNumber(m[1]);
-        if (hit) { focus = { matchedBy: m[1], project: hit.project, doc: hit.doc }; break; }
-      }
+    const refs = parseRefs(subject);
+    for (const r of refs.pids) {
+      const p = projects.find((x) => x.pid.split('-')[1] === r.num && (!r.office || x.office === r.office));
+      if (p) { focus = { matchedBy: p.pid, project: p }; break; }
+    }
+    if (!focus) for (const sc of refs.scs) {
+      const o = demoOrders.all().find((x) => x.sc === sc.replace(/^SC-/, ''));
+      if (!o) continue;
+      const p = o.projectId ? projects.find((x) => x.id === o.projectId) : null;
+      focus = p ? { matchedBy: 'SC ' + sc, project: p, doc: p.orders.find((x) => x.id === o.id) } : { matchedBy: 'SC ' + sc, order: o };
+      break;
+    }
+    if (!focus) for (const num of refs.docs) {
+      const hit = findDocByNumber(num);
+      if (hit) { focus = { matchedBy: num, project: hit.project, doc: hit.doc }; break; }
+    }
+    if (!focus && refs.pids.length) {
+      const r = refs.pids[0];
+      focus = { matchedBy: `PID ${r.num}${r.office ? '-' + r.office : ''}`, project: null };
     }
 
     const companyProjects = company ? projects.filter((p) => p.companyId === company.id) : [];

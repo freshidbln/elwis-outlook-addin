@@ -12,12 +12,12 @@ import http from 'node:http';
 import crypto from 'node:crypto';
 import { ElwisClient, httpError } from './elwis-client.js';
 import { Model, MAP } from './model.js';
+import { parseRefs } from '../src/refs.js';
 
 const PORT = process.env.PORT || 8787;
 const BASE = process.env.ELWIS_BASE_URL || 'https://freshid.elwis.cloud';
 const ORIGIN = process.env.ALLOWED_ORIGIN || 'https://freshidbln.github.io';
 const SESSION_HOURS = 8;
-const PID = /\bPID[-\s]?(\d{3,6})[-\s]?(NBG|HKG)\b/i;
 
 const sessions = new Map(); // token -> { client, model, expires, user }
 
@@ -85,15 +85,20 @@ async function lookup(s, { emails = [], subject = '' }) {
     }
   }
 
+  // PID in allen gelebten Schreibweisen (siehe src/refs.js); ohne Büro-Kürzel erst NBG, dann HKG
   let focus = null;
-  const pm = subject.match(PID);
-  if (pm) {
-    const pid = `PID-${pm[1]}-${pm[2].toUpperCase()}`;
-    const office = pm[2].toUpperCase();
-    const m = MAP[office].inquiry;
-    const hit = (await model.c.listArtifacts(model.byType(m.type, { [`attributes.${model.attrId[m.pid]}.value`]: { $eq: pid } }), { limit: 1 }))[0];
-    focus = { matchedBy: pid, project: hit ? (projects.find((p) => p.id === hit.id) || await buildProject(model, office, hit)) : null };
+  const refs = parseRefs(subject);
+  for (const r of refs.pids) {
+    for (const office of r.office ? [r.office] : ['NBG', 'HKG']) {
+      const m = MAP[office].inquiry;
+      const pid = `PID-${r.num}-${office}`;
+      const hit = (await model.c.listArtifacts(model.byType(m.type, { [`attributes.${model.attrId[m.pid]}.value`]: { $eq: pid } }), { limit: 1 }))[0];
+      if (hit) { focus = { matchedBy: pid, project: projects.find((p) => p.id === hit.id) || await buildProject(model, office, hit) }; break; }
+    }
+    if (focus) break;
   }
+  // TODO Live: SC-Nummern (Sales Order NBG „SC Number“ / HKG „SC Number HKG“) und Belegnummern nachschlagen
+  if (!focus && refs.pids.length) focus = { matchedBy: 'PID ' + refs.pids[0].num, project: null };
   return { contact, company, colleagues: [], projects, focus };
 }
 
