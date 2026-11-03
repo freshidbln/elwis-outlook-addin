@@ -39,3 +39,12 @@
 .dc-note { margin-top: 8px; font-size: 11.5px; background: #eaf4fb; border: 1px solid #c6e0f2; color: #1f4e79; border-radius: 6px; padding: 6px 8px; }
 .dc-handover { width: 100%; margin-top: 10px; justify-content: center; }
 .btn.small { font-size: 11.5px; padding: 4px 8px; }
+
+/* Freitext-Editor (Kommentar / Übergabe) */
+.st-text .st-textarea { width: 100%; box-sizing: border-box; font: inherit; font-size: 12.5px; border: 1px solid #c9d2dd; border-radius: 6px; padding: 6px 8px; resize: vertical; min-height: 76px; }
+.st-text .st-hint { font-size: 11px; color: #5d6b7a; margin-top: 4px; }
+.dc-comment { margin-top: 10px; border: 1px solid #e2e7ee; border-radius: 6px; padding: 6px 8px; font-size: 12px; }
+.dc-comment .lbl { display: flex; justify-content: space-between; align-items: center; font-size: 10.5px; color: #5d6b7a; margin-bottom: 2px; }
+.dc-comment .txt { white-space: pre-wrap; color: #1d2733; }
+.dc-comment .txt.empty { color: #8a96a3; font-style: italic; }
+.link-btn { font: inherit; font-size: 11px; color: #1f4e79; background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }

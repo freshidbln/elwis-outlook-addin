@@ -4,7 +4,7 @@ import { status, KIND_LABEL } from './status.js';
 import { demoEmails, STAFF } from './mock-data.js';
 import { STATUS_FIELDS, PHASE, computePhase } from './orders.js';
 import { SALES_FIELDS, SALES_PHASE, computeSalesPhase, overdueDays } from './sales.js';
-import { statusChip, showPicker, closePicker } from './status-ui.js';
+import { statusChip, showPicker, showTextEditor, closePicker } from './status-ui.js';
 
 // Falls office.js nicht geladen werden konnte (z. B. lokale Vorschau ohne Internet)
 if (typeof window.Office === 'undefined') {
@@ -406,7 +406,7 @@ function renderOrderCards(p, orders = p.orders || []) {
         <span class="oc-phase" style="background:${ph.color}" title="${esc(ph.label)}">${esc(ph.short)}</span>
       </div>
       <div class="subtitle">SC ${esc(o.sc || (o.fromDeal ? 'wird von Elwis vergeben' : '–'))}${o.number ? ' · Auftrag ' + esc(o.number) : ''} · PM ${esc(o.pm || '–')}</div>
-      ${o.fromDeal ? '<div class="dc-note">Aus dem Vertrieb übergeben – Auftragsdaten (Kunde, Wert, Verkäufer) wurden übernommen.</div>' : ''}
+      ${o.fromDeal ? `<div class="dc-note">Aus dem Vertrieb übergeben – Kunde, Wert und Verkäufer wurden übernommen.${o.handoverNote ? `<div style="margin-top:4px"><b>Übergabe-Notiz:</b> ${esc(o.handoverNote)}</div>` : ''}</div>` : ''}
       <div class="oc-grid">${ENUM_KEYS.map(tile).join('')}</div>
       <div class="mini-title" style="margin-top:10px">Termine</div>
       <div class="oc-dates">${DATE_KEYS.map(tile).join('')}</div>
@@ -439,6 +439,8 @@ function renderDealCard(d) {
       <button class="btn small" data-dc-snooze="${d.id}">Nachgefasst: +7 Tage</button></div>` : ''}
     ${d.reactivated ? '<div class="dc-note">Wiedervorlage: Das Projekt war „On Hold“ und ist wieder offen.</div>' : ''}
     <div class="oc-grid">${[...fields, ...dates].map(tile).join('')}</div>
+    <div class="dc-comment"><div class="lbl"><span>Kommentar / Übergabe</span><button class="link-btn" data-dc-comment="${d.id}">${d.comment ? 'Bearbeiten' : 'Schreiben'}</button></div>
+      <div class="txt${d.comment ? '' : ' empty'}">${d.comment ? esc(d.comment) : 'Noch kein Kommentar'}</div></div>
     ${d.vstatus === 'Gewonnen' ? `<button class="btn primary dc-handover" data-dc-handover="${d.id}">An Auftragsabwicklung übergeben →</button>` : ''}
     ${applied?.length ? `<div class="oc-applied">${applied.map((a) => `<div>${esc(a)}</div>`).join('')}</div>` : ''}
     <div class="stage2">Nach der Übergabe erscheint hier der Auftragsstatus.${provider.isDemo ? ' Demo: nur in diesem Browser gespeichert.' : ''}</div>
@@ -462,7 +464,20 @@ function wireDealTiles(root) {
     const deal = dealSeen[id] || {};
     showPicker(b, key, deal[key] || '', (val) => changeDeal(id, key, val));
   }));
-  root.querySelectorAll('[data-dc-handover]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); changeDeal(b.dataset.dcHandover, 'vstatus', 'Übergeben'); }));
+  root.querySelectorAll('[data-dc-comment]').forEach((b) => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const id = b.dataset.dcComment; const cur = dealSeen[id]?.comment || '';
+    showTextEditor(b, 'Kommentar / Übergabe', cur, (val) => { if (val !== cur) changeDeal(id, 'comment', val); });
+  }));
+  // Übergabe: wie in Monday mit Übergabe-Kommentar – er geht als Notiz an den Auftrag
+  root.querySelectorAll('[data-dc-handover]').forEach((b) => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const id = b.dataset.dcHandover; const cur = dealSeen[id]?.comment || '';
+    showTextEditor(b, 'Übergabe an die Auftragsabwicklung', cur, async (val) => {
+      if (val !== cur && !(await changeDeal(id, 'comment', val))) return;
+      changeDeal(id, 'vstatus', 'Übergeben');
+    }, { okLabel: 'Übergeben', hint: 'Was muss die Projektleitung wissen? Der Text erscheint am Auftrag.' });
+  }));
   root.querySelectorAll('[data-dc-snooze]').forEach((b) => b.addEventListener('click', async (e) => {
     e.stopPropagation();
     const id = b.dataset.dcSnooze;
@@ -498,7 +513,7 @@ function refreshViews() {
 function openBoard() {
   const fp = state.ctx?.focus?.project;
   const view = fp ? (provider.ordersForProject(fp.id).length ? '&view=orders' : '&view=sales') : '';
-  const url = new URL('board.html?v=1.4.0' + view, location.href).toString();
+  const url = new URL('board.html?v=1.4.1' + view, location.href).toString();
   if (state.inOutlook && Office.context.ui?.displayDialogAsync) {
     Office.context.ui.displayDialogAsync(url, { height: 90, width: 90, promptBeforeOpen: false }, (res) => {
       if (res.status !== Office.AsyncResultStatus.Succeeded) window.open(url, '_blank');

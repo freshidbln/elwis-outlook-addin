@@ -60,7 +60,7 @@ export const demoOrders = {
     const id = 'n' + Date.now().toString(36);
     const o = { id, kind: 'order', projectId: deal.projectId || null, pid: deal.pid, office: deal.office || 'NBG', name: deal.name,
       company: deal.company, contact: deal.contact, pm: deal.pm || deal.seller, seller: deal.seller, amount: deal.amount, currency: deal.currency || 'EUR',
-      sc: '', number: '', date: todayIso(), ab: 'in Arbeit', usd: 'Nicht notwendig', fromDeal: deal.id };
+      sc: '', number: '', date: todayIso(), ab: 'in Arbeit', usd: 'Nicht notwendig', fromDeal: deal.id, handoverNote: deal.comment || '' };
     list.push(o); lsSet(LS_CREATED, list);
     return o;
   },
@@ -94,7 +94,7 @@ export const demoDeals = {
     patches[id] = { ...(patches[id] || {}), ...res.patch };
     lsSet(LS_DEALS, patches);
     let order = null;
-    if (res.createOrder && !(cur.projectId && demoOrders.forProject(cur.projectId).length)) order = demoOrders.create(cur);
+    if (res.createOrder && !(cur.projectId && demoOrders.forProject(cur.projectId).length)) order = demoOrders.create(res.deal);
     return { deal: this.get(id), applied: res.applied, createdOrder: order };
   },
   reset() { lsSet(LS_DEALS, {}); }

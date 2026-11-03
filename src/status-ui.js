@@ -62,6 +62,37 @@ export function showPicker(anchor, key, current, onPick) {
     document.addEventListener('mousedown', away, true);
   }, 0);
 }
+// Freitext (z. B. „Kommentar / Übergabe“). onSave(text) wird bei „Speichern“ immer aufgerufen.
+export function showTextEditor(anchor, label, current, onSave, { okLabel = 'Speichern', hint = '' } = {}) {
+  closePicker();
+  const el = document.createElement('div');
+  el.className = 'st-picker st-text';
+  el.setAttribute('role', 'dialog');
+  el.innerHTML = `<div class="st-picker-title">${escHtml(label)}</div>
+    <textarea class="st-textarea" rows="4" maxlength="2000">${escHtml(current || '')}</textarea>
+    ${hint ? `<div class="st-hint">${escHtml(hint)}</div>` : ''}
+    <div class="st-picker-row"><button class="st-btn" data-cancel>Abbrechen</button><button class="st-btn primary" data-ok>${escHtml(okLabel)}</button></div>`;
+  document.body.appendChild(el);
+  const r = anchor.getBoundingClientRect();
+  const w = Math.max(220, Math.min(320, window.innerWidth - 16));
+  el.style.width = w + 'px';
+  let y = r.bottom + 4;
+  const h = el.offsetHeight;
+  if (y + h > window.innerHeight - 8) y = Math.max(8, r.top - h - 4);
+  el.style.left = Math.min(Math.max(8, r.left), window.innerWidth - w - 8) + 'px';
+  el.style.top = y + 'px';
+  openPicker = el; openedAt = Date.now();
+  const ta = el.querySelector('textarea');
+  ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+  el.querySelector('[data-cancel]').addEventListener('click', closePicker);
+  el.querySelector('[data-ok]').addEventListener('click', () => { const v = ta.value.trim(); closePicker(); onSave(v); });
+  ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) el.querySelector('[data-ok]').click(); });
+  setTimeout(() => {
+    const away = (e) => { if (openPicker && !openPicker.contains(e.target)) { closePicker(); document.removeEventListener('mousedown', away, true); } };
+    document.addEventListener('mousedown', away, true);
+  }, 0);
+}
+
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePicker(); });
 // Beim Scrollen schließen – aber nicht durch das Scrollen, das beim Öffnen selbst entsteht
 window.addEventListener('scroll', (e) => { if (openPicker && !openPicker.contains(e.target) && Date.now() - openedAt > 400) closePicker(); }, true);

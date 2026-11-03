@@ -31,6 +31,8 @@ export const SALES_FIELDS = [
     options: [['Preis', C.red], ['Lieferzeit', C.orange], ['Wettbewerb', C.purple], ['Projekt gestoppt', C.dark], ['Sonstiges', C.slate]] }
 ];
 export const SALES_FIELD = Object.fromEntries(SALES_FIELDS.map((f) => [f.key, f]));
+// Freitext wie die Monday-Spalte „Kommentar / Übergabe“ (51 von 879 Deals nutzen sie)
+export const SALES_COMMENT = { key: 'comment', label: 'Kommentar / Übergabe', elwis: 'Notiz am Projekt (vorhanden); geht bei der Übergabe als Übergabe-Notiz an den Auftrag' };
 
 export const ACTIVE = ['Offen', 'Angefragt (Lieferant)', 'Angebot schreiben', 'Raus an Kunden', 'In Verhandlung'];
 

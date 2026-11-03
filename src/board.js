@@ -3,8 +3,8 @@
 import { CONFIG } from './config.js';
 import { provider } from './data.js';
 import { STATUS_FIELDS, PHASES, RULES, computePhase } from './orders.js';
-import { SALES_FIELDS, SALES_PHASES, SALES_RULES, computeSalesPhase, overdueDays } from './sales.js';
-import { statusChip, showPicker, colorOf, escHtml as esc, fmtDate } from './status-ui.js';
+import { SALES_FIELDS, SALES_PHASES, SALES_RULES, SALES_COMMENT, computeSalesPhase, overdueDays } from './sales.js';
+import { statusChip, showPicker, showTextEditor, colorOf, escHtml as esc, fmtDate } from './status-ui.js';
 
 if (typeof window.Office === 'undefined') window.Office = { onReady: (cb) => setTimeout(() => cb({ host: null }), 0) };
 
@@ -25,7 +25,7 @@ function orderOverdue(o, key) {
 const VIEWS = {
   sales: {
     tab: 'Anfrage & Vertrieb', sub: 'vor dem Auftrag', unit: ['Deal', 'Deals'],
-    fields: SALES_FIELDS, phases: SALES_PHASES, phaseOf: computeSalesPhase, rules: SALES_RULES,
+    fields: SALES_FIELDS, phases: SALES_PHASES, phaseOf: computeSalesPhase, rules: SALES_RULES, textCol: { ...SALES_COMMENT, w: 260 },
     collapsed: ['verloren', 'uebergeben'], person: 'seller', personLabel: 'Alle Verkäufer',
     infoCols: [
       { key: 'seller', label: 'Verkäufer', w: 120 }, { key: 'contact', label: 'Kontakt', w: 130 },
@@ -49,7 +49,7 @@ const VIEWS = {
     list: () => provider.listOrders(),
     update: async (id, k, v) => { const r = await provider.updateOrder(id, k, v); return { item: r.order, applied: r.applied }; },
     overdue: orderOverdue,
-    badge: (o) => (o.okayToInvoice ? '<span class="okinv">Okay to Invoice</span>' : ''),
+    badge: (o) => (o.okayToInvoice ? '<span class="okinv">Okay to Invoice</span>' : '') + (o.handoverNote ? `<span class="od re" title="${esc(o.handoverNote)}">Übergabe-Notiz</span>` : ''),
     elwisKind: 'order'
   }
 };
@@ -87,20 +87,21 @@ async function switchView(k) {
   $('q').placeholder = k === 'sales' ? 'Deal, Kunde, PID, Angebots-Nr. suchen' : 'Auftrag, Kunde, SC-Nr. suchen';
   $('rules').hidden = true;
   await load();
-  const people = [...new Set(items.map((o) => o[V().person]).filter(Boolean))].sort();
+  const people = [...new Set(items.flatMap((o) => splitPeople(o[V().person])))].sort();
   $('personFilter').innerHTML = `<option value="">${V().personLabel}</option>` + people.map((p) => `<option>${esc(p)}</option>`).join('');
   render();
 }
 
 async function load() { items = await V().list(); render(); }
+const splitPeople = (s) => String(s || '').split(/\s*,\s*/).filter(Boolean);
 
 function filtered() {
   const q = $('q').value.trim().toLowerCase();
   const person = $('personFilter').value;
   const office = $('officeFilter').value;
   return items.filter((o) =>
-    (!person || o[V().person] === person) && (!office || o.office === office) &&
-    (!q || [o.name, o.company, o.contact, o.sc, o.pid, o.number, o.an].join(' ').toLowerCase().includes(q)));
+    (!person || splitPeople(o[V().person]).includes(person)) && (!office || o.office === office) &&
+    (!q || [o.name, o.company, o.contact, o.sc, o.pid, o.number, o.an, o.comment].join(' ').toLowerCase().includes(q)));
 }
 
 function render() {
@@ -108,7 +109,8 @@ function render() {
   const list = filtered();
   const byPhase = Object.fromEntries(v.phases.map((p) => [p.key, []]));
   list.forEach((o) => byPhase[v.phaseOf(o)].push(o));
-  const totalW = 260 + v.infoCols.reduce((s, c) => s + c.w, 0) + v.fields.reduce((s, f) => s + statusW(f), 0) + 44;
+  const tw = v.textCol ? v.textCol.w : 0;
+  const totalW = 260 + v.infoCols.reduce((s, c) => s + c.w, 0) + v.fields.reduce((s, f) => s + statusW(f), 0) + tw + 44;
 
   $('board').innerHTML = v.phases.map((ph) => {
     const rows = byPhase[ph.key];
@@ -119,14 +121,15 @@ function render() {
         <span class="grp-count">${rows.length} ${rows.length === 1 ? v.unit[0] : v.unit[1]}${isCol ? ' · eingeklappt' : ''}</span>
       </button>
       ${isCol ? '' : `<div class="tbl-wrap"><table class="tbl" style="width:${totalW}px">
-        <colgroup><col style="width:260px">${v.infoCols.map((c) => `<col style="width:${c.w}px">`).join('')}${v.fields.map((f) => `<col style="width:${statusW(f)}px">`).join('')}<col style="width:44px"></colgroup>
+        <colgroup><col style="width:260px">${v.infoCols.map((c) => `<col style="width:${c.w}px">`).join('')}${v.fields.map((f) => `<col style="width:${statusW(f)}px">`).join('')}${tw ? `<col style="width:${tw}px">` : ''}<col style="width:44px"></colgroup>
         <thead><tr>
           <th class="sticky">${viewKey === 'sales' ? 'Deal' : 'Auftrag'}</th>
           ${v.infoCols.map((c) => `<th class="ro" title="Kommt aus Elwis">${esc(c.label)}</th>`).join('')}
           ${v.fields.map((f) => `<th title="${esc(f.label)}">${esc(f.short || f.label)}</th>`).join('')}
+          ${tw ? `<th title="${esc(v.textCol.label)}">${esc(v.textCol.label)}</th>` : ''}
           <th></th>
         </tr></thead>
-        <tbody>${rows.length ? rows.map(renderRow).join('') : `<tr><td class="sticky empty" colspan="${2 + v.infoCols.length + v.fields.length}">Keine Einträge in dieser Gruppe</td></tr>`}</tbody>
+        <tbody>${rows.length ? rows.map(renderRow).join('') : `<tr><td class="sticky empty" colspan="${2 + v.infoCols.length + v.fields.length + (tw ? 1 : 0)}">Keine Einträge in dieser Gruppe</td></tr>`}</tbody>
         ${rows.length ? renderFooter(rows) : ''}
       </table></div>`}
     </section>`;
@@ -139,6 +142,10 @@ function render() {
     const [id, key] = td.dataset.cell.split('|');
     const o = items.find((x) => x.id === id);
     showPicker(td, key, o[key] || '', (val) => change(id, key, val));
+  }));
+  $('board').querySelectorAll('[data-text]').forEach((td) => td.addEventListener('click', () => {
+    const id = td.dataset.text; const o = items.find((x) => x.id === id); const k = V().textCol.key;
+    showTextEditor(td, V().textCol.label, o[k] || '', (val) => { if (val !== (o[k] || '')) change(id, k, val); });
   }));
   $('board').querySelectorAll('[data-open]').forEach((b) => b.addEventListener('click', () => openInElwis(items.find((x) => x.id === b.dataset.open))));
   if (flashId) {
@@ -157,6 +164,7 @@ function renderRow(o) {
     </td>
     ${v.infoCols.map((c) => `<td class="ro${c.align === 'right' ? ' right' : ''}">${c.key === 'amount' ? money(o.amount, o.currency) : c.date ? fmtDate(o[c.key]) : (c.key === 'sc' && !o.sc && o.fromDeal) ? '<span class="neu-sc" title="SC-Nummer vergibt Elwis beim Anlegen der Sales Order">neu</span>' : esc(o[c.key] || '')}</td>`).join('')}
     ${v.fields.map((f) => `<td class="st${f.type === 'date' ? ' dt' : ''}${f.type === 'date' && v.overdue(o, f.key) ? ' late' : ''}" data-cell="${o.id}|${f.key}" title="${esc(f.label)}">${statusChip(f.key, o[f.key], { full: f.type !== 'date' })}</td>`).join('')}
+    ${v.textCol ? `<td class="txt" data-text="${o.id}" title="${esc(o[v.textCol.key] || 'Klicken zum Schreiben')}">${o[v.textCol.key] ? esc(o[v.textCol.key]) : '<span class="txt-empty">+ Kommentar</span>'}</td>` : ''}
     <td class="ro"><button class="open-btn" data-open="${o.id}" title="In Elwis öffnen">↗</button></td>
   </tr>`;
 }
@@ -175,7 +183,7 @@ function renderFooter(rows) {
   return `<tfoot><tr>
     <td class="sticky"></td>
     ${v.infoCols.map((c) => `<td class="${c.key === 'amount' ? 'right sum' : ''}">${c.key === 'amount' ? `${sumTxt}<div class="sum-l">Summe</div>` : ''}</td>`).join('')}
-    ${v.fields.map((f) => `<td>${bar(f)}</td>`).join('')}<td></td>
+    ${v.fields.map((f) => `<td>${bar(f)}</td>`).join('')}${v.textCol ? '<td></td>' : ''}<td></td>
   </tr></tfoot>`;
 }
 
@@ -214,7 +222,8 @@ function toggleRules() {
       ? SALES_FIELDS.map((f) => `<tr><td>${esc(f.label)}</td><td>${esc(f.elwis || '')}</td></tr>`).join('') +
         `<tr><td colspan="2" class="sub-h">Werte des Vertriebsstatus</td></tr>` +
         SALES_FIELDS[0].options.map(([l, , m]) => `<tr><td>${esc(l)}</td><td>${/^neu/.test(m) ? `<span class="neu">${esc(m)}</span>` : esc(m)}</td></tr>`).join('') +
-        `<tr><td>Verkäufer, Kontakt, Unternehmen, PID, Angebots-Nr., Wert, Anfrage vom</td><td>vorhanden (werden nur angezeigt)</td></tr>`
+        `<tr><td>${esc(SALES_COMMENT.label)}</td><td>${esc(SALES_COMMENT.elwis)}</td></tr>` +
+        `<tr><td>Verkäufer (auch mehrere), Kontakt, Unternehmen, PID, Angebots-Nr., Wert, Anfrage vom</td><td>vorhanden (werden nur angezeigt)</td></tr>`
       : STATUS_FIELDS.map((f) => `<tr><td>${esc(f.label)}</td><td>${f.elwis ? `vorhanden: ${esc(f.elwis)}` : '<span class="neu">neu anlegen</span>'}</td></tr>`).join('') +
         `<tr><td>PM, Verkäufer, Kontakt, Unternehmen, SC-Nr., Auftragswert</td><td>vorhanden (werden nur angezeigt)</td></tr>`;
     $('rulesBody').innerHTML = `
