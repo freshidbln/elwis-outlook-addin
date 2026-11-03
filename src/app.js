@@ -28,7 +28,11 @@ const initials = (name) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((p)
 let state = { mail: null, ctx: null, tab: 'projects', inOutlook: false };
 
 // ---------- Start ----------
-Office.onReady((info) => {
+// office.js ruft onReady teils sofort (synchron) auf, noch bevor dieses Modul fertig
+// ausgewertet ist. Deshalb den Start bewusst auf den nächsten Tick verschieben.
+Office.onReady((info) => setTimeout(() => start(info), 0));
+
+function start(info) {
   state.inOutlook = info.host === Office.HostType.Outlook;
   $('modeBadge').textContent = provider.isDemo ? 'Demo' : 'Live';
   $('modeBadge').classList.toggle('live', !provider.isDemo);
@@ -46,7 +50,7 @@ Office.onReady((info) => {
   } else {
     setupSimulator();
   }
-});
+}
 
 function bindUi() {
   $('refreshBtn').addEventListener('click', () => state.inOutlook ? loadFromOutlook() : loadMail(state.mail));
@@ -97,7 +101,7 @@ function setupSimulator() {
   $('simulator').hidden = false;
   loadMail(toMail(demoEmails[0]));
 }
-const toMail = (m) => ({ mode: 'read', fromName: m.fromName, fromEmail: m.fromEmail, subject: m.subject, emails: [m.fromEmail] });
+function toMail(m) { return ({ mode: 'read', fromName: m.fromName, fromEmail: m.fromEmail, subject: m.subject, emails: [m.fromEmail] }); }
 
 // ---------- Laden und Darstellen ----------
 async function loadMail(mail) {
