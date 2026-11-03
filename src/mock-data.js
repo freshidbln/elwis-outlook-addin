@@ -116,6 +116,10 @@ export const demoEmails = [
     subject: 'AW: fresh id / PID-3201-NBG / Sommer-Display – Lieferdatum?', received: d(0) },
   { label: 'Felix Brandt – Schreibweise wie im Alltag (PID ohne Büro + SC-Nr.)', fromName: 'Felix Brandt', fromEmail: 'f.brandt@nordlicht-getraenke.example',
     subject: 'AW: Sommer-Display // 376901 // PID 3201', received: d(0) },
+  { label: 'Markus Vogel – Angebot nachfassen (Vertrieb, überfällig)', fromName: 'Markus Vogel', fromEmail: 'markus.vogel@alpenkraeuter.example',
+    subject: 'AW: Ihr Angebot 2026100087 – Thekenaufsteller Acryl', received: d(0) },
+  { label: 'Felix Brandt – neue Anfrage läuft (Vertrieb)', fromName: 'Felix Brandt', fromEmail: 'f.brandt@nordlicht-getraenke.example',
+    subject: 'Weihnachts-Geschenkset PID 3215 – gibt es schon Preise?', received: d(0) },
   { label: 'Markus Vogel – Zahlung Rechnung 2026090318', fromName: 'Markus Vogel', fromEmail: 'markus.vogel@alpenkraeuter.example',
     subject: 'Zahlung Rechnung 2026090318', received: d(0) },
   { label: 'Kevin Liu – Produktionsstand (HKG)', fromName: 'Kevin Liu', fromEmail: 'kevin.liu@brightpack.example',
@@ -189,4 +193,31 @@ export const extraOrders = [
       ab: 'Raus an Kunden', korri: 'Freigegeben', muster: 'ohne Freigabemuster' }),
   X({ id: 'x14', sc: '375512', name: 'Abruf Flyer Messe', company: 'Lumina Kosmetik GmbH', contact: 'Eva Martin', pm: 'Mara Hoffmann', seller: 'Mara Hoffmann', amount: 1250, abruf: true,
       ab: 'Raus an Kunden', muster: 'ohne Freigabemuster' })
+];
+
+// ---------- Vertriebsstatus (Demo) ----------
+// Für die Beispielprojekte p1–p6 (Anfragen in Elwis) plus weitere erfundene Deals
+export const SALES_PM = {
+  p1: { vstatus: 'Übergeben', chance: 'Close to an order', prio: '1', entscheidung: d(-30), an: '2026090112' },
+  p2: { vstatus: 'Angefragt (Lieferant)', chance: 'Neutral', prio: '2', entscheidung: d(3), an: '' },
+  p3: { vstatus: 'Raus an Kunden', chance: 'Close to an order', prio: '2', entscheidung: d(-2), an: '2026100087' },
+  p4: { vstatus: 'Übergeben', chance: 'Close to an order', prio: '1', entscheidung: d(-90), an: '2026070054' },
+  p5: { vstatus: 'Angebot schreiben', chance: 'Neutral', prio: '3', entscheidung: d(12), an: '2026100131' },
+  p6: { vstatus: 'Übergeben', chance: 'Close to an order', prio: '1', entscheidung: d(-45), an: '2026080210' }
+};
+
+const D = (o) => ({ kind: 'deal', office: 'NBG', currency: 'EUR', chance: 'Neutral', prio: '2', ...o });
+export const extraDeals = [
+  D({ id: 'd1', pid: 'PID-3402-NBG', an: '', name: 'Thermobecher Messe', company: 'Velotec Fahrräder GmbH', contact: 'Jana Roth', seller: 'Jonas Weber', amount: 6200, received: d(-1), vstatus: 'Offen', entscheidung: d(6) }),
+  D({ id: 'd2', pid: 'PID-3399-NBG', an: '', name: 'Adventskalender Kunden', company: 'Medivet Tiergesundheit GmbH', contact: 'Sabine Kurz', seller: 'Mara Hoffmann', amount: 14500, received: d(-4), vstatus: 'Offen', entscheidung: d(-1) }),
+  D({ id: 'd3', pid: 'PID-3391-NBG', an: '', name: 'Bambus-Lunchbox', company: 'Stadtwerke Elbtal', contact: 'Peter Lang', seller: 'Lea Wolf', amount: 8800, received: d(-9), vstatus: 'Angefragt (Lieferant)', entscheidung: d(4) }),
+  D({ id: 'd4', pid: 'PID-3387-NBG', an: '2026100152', name: 'Notizbücher recycelt', company: 'Nordwind Versicherung AG', contact: 'Clara Neumann', seller: 'Lea Wolf', amount: 4300, received: d(-12), vstatus: 'Raus an Kunden', entscheidung: d(9), chance: 'Close to an order' }),
+  D({ id: 'd5', pid: 'PID-3380-NBG', an: '2026100140', name: 'Kühlakkus mit Logo', company: 'Bergquell Brauerei GmbH', contact: 'Tim Becker', seller: 'Tom Richter', amount: 12900, received: d(-20), vstatus: 'Raus an Kunden', entscheidung: d(-6), chance: 'Neutral' }),
+  D({ id: 'd6', pid: 'PID-3371-NBG', an: '2026100118', name: 'Sonnenschirme Biergarten', company: 'Bergquell Brauerei GmbH', contact: 'Tim Becker', seller: 'Anna Becker', amount: 41000, received: d(-27), vstatus: 'In Verhandlung', entscheidung: d(5), chance: 'Close to an order', prio: '1' }),
+  D({ id: 'd7', pid: 'PID-3365-NBG', an: '2026100103', name: 'Kosmetiktaschen', company: 'Lumina Kosmetik GmbH', contact: 'Eva Martin', seller: 'Mara Hoffmann', amount: 7600, received: d(-31), vstatus: 'In Verhandlung', entscheidung: d(-3), chance: 'Neutral' }),
+  D({ id: 'd8', pid: 'PID-3342-NBG', an: '2026090170', name: 'Fahrradklingeln Aktion', company: 'Velotec Fahrräder GmbH', contact: 'Jana Roth', seller: 'Jonas Weber', amount: 3500, received: d(-50), vstatus: 'On Hold', onHoldSince: d(-20), entscheidung: d(25), chance: 'Low chance' }),
+  D({ id: 'd9', pid: 'PID-3330-NBG', an: '2026090155', name: 'Messestand-Give-aways 2027', company: 'Nordwind Versicherung AG', contact: 'Clara Neumann', seller: 'Lea Wolf', amount: 9900, received: d(-60), vstatus: 'On Hold', onHoldSince: d(-35), entscheidung: d(-1) }),
+  D({ id: 'd10', pid: 'PID-3355-NBG', an: '2026100095', name: 'Kaffeebecher To-go', company: 'Stadtwerke Elbtal', contact: 'Peter Lang', seller: 'Lea Wolf', amount: 5100, received: d(-35), vstatus: 'Gewonnen', entscheidung: d(-4), chance: 'Close to an order', prio: '1' }),
+  D({ id: 'd11', pid: 'PID-3318-NBG', an: '2026090131', name: 'Isolierflaschen Team', company: 'Velotec Fahrräder GmbH', contact: 'Jana Roth', seller: 'Jonas Weber', amount: 6600, received: d(-70), vstatus: 'Verloren', lostReason: 'Preis', entscheidung: d(-40), chance: 'Low chance' }),
+  D({ id: 'd12', pid: 'PID-3301-NBG', an: '2026090112', name: 'Strandtücher Sommer', company: 'Lumina Kosmetik GmbH', contact: 'Eva Martin', seller: 'Mara Hoffmann', amount: 9200, received: d(-80), vstatus: 'Verloren', lostReason: 'Lieferzeit', entscheidung: d(-50) })
 ];

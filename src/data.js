@@ -4,19 +4,25 @@
 //   getProject(id)               -> Projekt mit allen Vorgängen
 //   saveNote(payload), createTask(payload)   (Stufe 2)
 //   listOrders(), getOrderSync(id), updateOrder(id, key, value)   (Auftragsstatus / Board)
+//   listDeals(), getDealSync(projectId), updateDeal(id, key, value), ordersForProject(id)   (Vertrieb)
 // MockProvider liefert Beispieldaten, ApiProvider spricht mit dem Backend.
 
 import { CONFIG } from './config.js';
-import { companies, contacts, projects, FOLDER_TEMPLATE, ORDER_PM, extraOrders } from './mock-data.js';
+import { companies, contacts, projects, FOLDER_TEMPLATE, ORDER_PM, extraOrders, SALES_PM, extraDeals } from './mock-data.js';
 import { applyChange, applyDateRules, todayIso } from './orders.js';
 import { parseRefs } from './refs.js';
+import { applySalesChange, applySalesDateRules } from './sales.js';
 
 // ---------- Demo-Speicher für Auftragsstatus ----------
 // Live liegen die Werte an der Elwis Sales Order. In der Demo werden Änderungen im
 // Browser gespeichert, damit Add-in und Board-Fenster denselben Stand zeigen.
 const LS_KEY = 'elwis-demo-orders-v1';
-function loadPatches() { try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch { return {}; } }
-function savePatches(p) { try { localStorage.setItem(LS_KEY, JSON.stringify(p)); } catch { /* ohne Speicher: nur im Speicher */ } }
+const LS_CREATED = 'elwis-demo-orders-created-v1';
+const LS_DEALS = 'elwis-demo-deals-v1';
+const lsGet = (k, def) => { try { return JSON.parse(localStorage.getItem(k) || JSON.stringify(def)); } catch { return def; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* ohne Speicher */ } };
+function loadPatches() { return lsGet(LS_KEY, {}); }
+function savePatches(p) { lsSet(LS_KEY, p); }
 let memPatches = loadPatches();
 
 function baseOrders() {
@@ -28,6 +34,8 @@ function baseOrders() {
       contact: contact?.name || '', pm: p.projectLead, seller: (p.team || [])[1] || p.projectLead, amount: o.amount, currency: o.currency });
   }));
   extraOrders.forEach((o) => out.push({ ...o }));
+  // In der Demo per Übergabe aus dem Vertrieb entstandene Aufträge
+  lsGet(LS_CREATED, []).forEach((o) => out.push({ ...o }));
   return out;
 }
 function mergedOrder(base) {
@@ -38,6 +46,7 @@ function mergedOrder(base) {
 export const demoOrders = {
   all: () => baseOrders().map(mergedOrder),
   get: (id) => { const b = baseOrders().find((o) => o.id === id); return b ? mergedOrder(b) : null; },
+  forProject: (pid) => baseOrders().filter((o) => o.projectId === pid).map(mergedOrder),
   update(id, key, value) {
     const cur = this.get(id);
     const res = applyChange(cur, key, value);
@@ -46,7 +55,49 @@ export const demoOrders = {
     savePatches(memPatches);
     return { order: this.get(id), applied: res.applied };
   },
-  reset() { memPatches = {}; savePatches({}); }
+  create(deal) {
+    const list = lsGet(LS_CREATED, []);
+    const id = 'n' + Date.now().toString(36);
+    const o = { id, kind: 'order', projectId: deal.projectId || null, pid: deal.pid, office: deal.office || 'NBG', name: deal.name,
+      company: deal.company, contact: deal.contact, pm: deal.pm || deal.seller, seller: deal.seller, amount: deal.amount, currency: deal.currency || 'EUR',
+      sc: '', number: '', date: todayIso(), ab: 'in Arbeit', usd: 'Nicht notwendig', fromDeal: deal.id };
+    list.push(o); lsSet(LS_CREATED, list);
+    return o;
+  },
+  reset() { memPatches = {}; savePatches({}); lsSet(LS_CREATED, []); }
+};
+
+// ---------- Demo-Speicher für Vertriebsstatus ----------
+function baseDeals() {
+  const out = projects.map((p) => {
+    const company = companies.find((c) => c.id === p.companyId);
+    const contact = contacts.find((c) => c.id === p.contactId);
+    return { id: 'deal-' + p.id, kind: 'deal', projectId: p.id, pid: p.pid, office: p.office, name: p.name, company: company?.name || '',
+      contact: contact?.name || '', seller: (p.team || [])[0] || p.projectLead, pm: p.projectLead, amount: p.amount, currency: p.currency,
+      received: p.received, ...(SALES_PM[p.id] || {}) };
+  });
+  extraDeals.forEach((d) => out.push({ ...d }));
+  return out;
+}
+function mergedDeal(base) {
+  const patches = lsGet(LS_DEALS, {});
+  return applySalesDateRules({ ...base, ...(patches[base.id] || {}) }, todayIso());
+}
+export const demoDeals = {
+  all: () => baseDeals().map(mergedDeal),
+  get: (id) => { const b = baseDeals().find((d) => d.id === id); return b ? mergedDeal(b) : null; },
+  forProject: (pid) => { const b = baseDeals().find((d) => d.projectId === pid); return b ? mergedDeal(b) : null; },
+  update(id, key, value) {
+    const cur = this.get(id);
+    const res = applySalesChange(cur, key, value, todayIso());
+    const patches = lsGet(LS_DEALS, {});
+    patches[id] = { ...(patches[id] || {}), ...res.patch };
+    lsSet(LS_DEALS, patches);
+    let order = null;
+    if (res.createOrder && !(cur.projectId && demoOrders.forProject(cur.projectId).length)) order = demoOrders.create(cur);
+    return { deal: this.get(id), applied: res.applied, createdOrder: order };
+  },
+  reset() { lsSet(LS_DEALS, {}); }
 };
 
 function findDocByNumber(num) {
@@ -138,7 +189,11 @@ class MockProvider {
   async listOrders() { await delay(120); return demoOrders.all(); }
   getOrderSync(id) { return demoOrders.get(id); }
   async updateOrder(id, key, value) { await delay(150); return demoOrders.update(id, key, value); }
-  resetOrders() { demoOrders.reset(); }
+  resetOrders() { demoOrders.reset(); demoDeals.reset(); }
+  ordersForProject(pid) { return demoOrders.forProject(pid); }
+  async listDeals() { await delay(120); return demoDeals.all(); }
+  getDealSync(projectId) { return demoDeals.forProject(projectId); }
+  async updateDeal(id, key, value) { await delay(150); return demoDeals.update(id, key, value); }
 
   async getFolders() { await delay(80); return FOLDER_TEMPLATE; }
   async saveFiles(payload) { await delay(700); return { ok: true, demo: true, payload }; }
@@ -183,6 +238,11 @@ class ApiProvider {
   // Live: Backend schreibt das Feld in die Elwis Sales Order; die Regeln laufen als Elwis-Abläufe
   updateOrder(id, key, value) { return this.call('/api/orders/' + encodeURIComponent(id), { method: 'PATCH', body: JSON.stringify({ key, value }) }); }
   resetOrders() {}
+  ordersForProject(pid) { const p = (this.cache || []).find((x) => x.id === pid); return p?.orders || []; }
+  listDeals() { return this.call('/api/deals'); }
+  getDealSync(projectId) { const p = (this.cache || []).find((x) => x.id === projectId); return p?.deal || null; }
+  // Live: Vertriebsstatus wird auf Inquiry/Quote in Elwis abgebildet (siehe sales.js)
+  updateDeal(id, key, value) { return this.call('/api/deals/' + encodeURIComponent(id), { method: 'PATCH', body: JSON.stringify({ key, value }) }); }
   saveFiles(payload) { return this.call('/api/files', { method: 'POST', body: JSON.stringify(payload) }); }
   saveNote(payload) { return this.call('/api/notes', { method: 'POST', body: JSON.stringify(payload) }); }
   createTask(payload) { return this.call('/api/tasks', { method: 'POST', body: JSON.stringify(payload) }); }

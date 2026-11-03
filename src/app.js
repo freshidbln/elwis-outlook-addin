@@ -3,6 +3,7 @@ import { provider } from './data.js';
 import { status, KIND_LABEL } from './status.js';
 import { demoEmails, STAFF } from './mock-data.js';
 import { STATUS_FIELDS, PHASE, computePhase } from './orders.js';
+import { SALES_FIELDS, SALES_PHASE, computeSalesPhase, overdueDays } from './sales.js';
 import { statusChip, showPicker, closePicker } from './status-ui.js';
 
 // Falls office.js nicht geladen werden konnte (z. B. lokale Vorschau ohne Internet)
@@ -58,7 +59,7 @@ function bindUi() {
   $('refreshBtn').addEventListener('click', () => state.inOutlook ? loadFromOutlook() : loadMail(state.mail));
   $('boardBtn').addEventListener('click', openBoard);
   // Änderungen aus dem Board-Fenster übernehmen (Demo: gemeinsamer Browser-Speicher)
-  window.addEventListener('storage', (e) => { if (e.key && e.key.startsWith('elwis-demo-orders') && state.ctx) refreshViews(); });
+  window.addEventListener('storage', (e) => { if (e.key && e.key.startsWith('elwis-demo-') && state.ctx) refreshViews(); });
   $('sheetBack').addEventListener('click', closeSheet);
   $('sheetBackdrop').addEventListener('click', closeSheet);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
@@ -129,7 +130,7 @@ function renderHome() {
   parts.push(`<div class="mailctx">${mail.mode === 'compose' ? 'An:' : 'Von:'} <b>${esc(mail.fromName || mail.fromEmail || 'unbekannt')}</b> <span>${esc(mail.fromEmail || '')}</span></div>`);
 
   if (ctx.focus) parts.push(renderFocus(ctx.focus));
-  if (ctx.focus?.project) parts.push(renderOrderCards(ctx.focus.project));
+  if (ctx.focus?.project) parts.push(renderStatusCards(ctx.focus.project));
 
   if (!ctx.contact) {
     parts.push(renderUnknown(mail));
@@ -335,6 +336,7 @@ function wireView() {
   v.querySelectorAll('[data-elwis]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); const [k, o, id] = b.dataset.elwis.split('|'); openInElwis(k, o, id); }));
   v.querySelectorAll('[data-folder]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); openFolder(b.dataset.folder); }));
   wireOrderTiles(v);
+  wireDealTiles(v);
   v.querySelectorAll('[data-action="file"]').forEach((b) => b.addEventListener('click', () => openFileForm()));
   v.querySelectorAll('[data-action="note"]').forEach((b) => b.addEventListener('click', openNoteForm));
   v.querySelectorAll('[data-action="task"]').forEach((b) => b.addEventListener('click', openTaskForm));
@@ -376,8 +378,17 @@ const lastApplied = {};
 const DATE_KEYS = STATUS_FIELDS.filter((f) => f.type === 'date');
 const ENUM_KEYS = STATUS_FIELDS.filter((f) => f.type !== 'date');
 
-function renderOrderCards(p) {
-  const orders = p.orders || [];
+// Ein Projekt zeigt immer genau eine Statuskarte: vor dem Auftrag den Vertriebsstatus,
+// ab Auftrag (Übergabe) den Auftragsstatus.
+function renderStatusCards(p) {
+  const orders = provider.ordersForProject(p.id);
+  if (orders.length) return renderOrderCards(p, orders);
+  const deal = provider.getDealSync(p.id);
+  if (deal) return renderDealCard(deal);
+  return renderOrderCards(p, []);
+}
+
+function renderOrderCards(p, orders = p.orders || []) {
   if (!orders.length) {
     return `<div class="card"><div class="card-label">Auftragsstatus</div>
       <div class="subtitle">Noch kein Auftrag. Die Statuskarte erscheint, sobald in Elwis ein Auftrag (Sales Order) zu diesem Projekt existiert.</div></div>`;
@@ -394,7 +405,8 @@ function renderOrderCards(p) {
         <div class="title" style="font-size:13px">${esc(o.name)}</div>
         <span class="oc-phase" style="background:${ph.color}" title="${esc(ph.label)}">${esc(ph.short)}</span>
       </div>
-      <div class="subtitle">SC ${esc(o.sc || '–')}${o.number ? ' · Auftrag ' + esc(o.number) : ''} · PM ${esc(o.pm || '–')}</div>
+      <div class="subtitle">SC ${esc(o.sc || (o.fromDeal ? 'wird von Elwis vergeben' : '–'))}${o.number ? ' · Auftrag ' + esc(o.number) : ''} · PM ${esc(o.pm || '–')}</div>
+      ${o.fromDeal ? '<div class="dc-note">Aus dem Vertrieb übergeben – Auftragsdaten (Kunde, Wert, Verkäufer) wurden übernommen.</div>' : ''}
       <div class="oc-grid">${ENUM_KEYS.map(tile).join('')}</div>
       <div class="mini-title" style="margin-top:10px">Termine</div>
       <div class="oc-dates">${DATE_KEYS.map(tile).join('')}</div>
@@ -402,6 +414,60 @@ function renderOrderCards(p) {
       <div class="stage2">Klick auf ein Feld ändert den Status${provider.isDemo ? ' (Demo: nur in diesem Browser gespeichert)' : ' direkt in Elwis'}.</div>
     </div>`;
   }).join('');
+}
+
+const addDaysIso = (n) => { const t = new Date(); t.setDate(t.getDate() + n); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; };
+
+const dealSeen = {};
+function renderDealCard(d) {
+  dealSeen[d.id] = d;
+  const ph = SALES_PHASE[computeSalesPhase(d)];
+  const late = overdueDays(d, addDaysIso(0));
+  const fields = SALES_FIELDS.filter((f) => f.type !== 'date' && (f.key !== 'lostReason' || d.vstatus === 'Verloren'));
+  const dates = SALES_FIELDS.filter((f) => f.type === 'date');
+  const tile = (f) => `<button class="oc-tile" data-dc="${d.id}|${f.key}" title="${esc(f.label)} ändern">
+      <span class="lbl">${esc(f.short || f.label)}</span>${statusChip(f.key, d[f.key])}</button>`;
+  const applied = lastApplied[d.id];
+  return `<div class="card">
+    <div class="card-label">Vertriebsstatus</div>
+    <div class="oc-head">
+      <div class="title" style="font-size:13px">${esc(d.name)}</div>
+      <span class="oc-phase" style="background:${ph.color}" title="${esc(ph.label)}">${esc(ph.short)}</span>
+    </div>
+    <div class="subtitle">Verkäufer ${esc(d.seller || '–')}${d.an ? ' · Angebot ' + esc(d.an) : ''}${d.amount ? ' · ' + money(d.amount, d.currency) : ''}</div>
+    ${late ? `<div class="dc-alert"><span><b>Entscheidung war bis ${dateDe(d.entscheidung)}</b> – seit ${late} ${late === 1 ? 'Tag' : 'Tagen'} überfällig. Beim Kunden nachfassen?</span>
+      <button class="btn small" data-dc-snooze="${d.id}">Nachgefasst: +7 Tage</button></div>` : ''}
+    ${d.reactivated ? '<div class="dc-note">Wiedervorlage: Das Projekt war „On Hold“ und ist wieder offen.</div>' : ''}
+    <div class="oc-grid">${[...fields, ...dates].map(tile).join('')}</div>
+    ${d.vstatus === 'Gewonnen' ? `<button class="btn primary dc-handover" data-dc-handover="${d.id}">An Auftragsabwicklung übergeben →</button>` : ''}
+    ${applied?.length ? `<div class="oc-applied">${applied.map((a) => `<div>${esc(a)}</div>`).join('')}</div>` : ''}
+    <div class="stage2">Nach der Übergabe erscheint hier der Auftragsstatus.${provider.isDemo ? ' Demo: nur in diesem Browser gespeichert.' : ''}</div>
+  </div>`;
+}
+
+async function changeDeal(id, key, val) {
+  const r = await provider.updateDeal(id, key, val);
+  lastApplied[id] = r.applied;
+  if (r.createdOrder) lastApplied[r.createdOrder.id] = ['V5: Auftrag aus dem Vertrieb angelegt – jetzt Auftragsstatus pflegen'];
+  toast(r.createdOrder ? 'Übergeben – der Auftrag ist jetzt in der Auftragsabwicklung.' : (r.applied.length ? `Gespeichert · ${r.applied.length} Regel(n) angewendet` : 'Gespeichert'), true);
+  refreshViews();
+}
+
+function wireDealTiles(root) {
+  root.querySelectorAll('[data-dc]').forEach((b) => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const [id, key] = b.dataset.dc.split('|');
+    const deal = dealSeen[id] || {};
+    showPicker(b, key, deal[key] || '', (val) => changeDeal(id, key, val));
+  }));
+  root.querySelectorAll('[data-dc-handover]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); changeDeal(b.dataset.dcHandover, 'vstatus', 'Übergeben'); }));
+  root.querySelectorAll('[data-dc-snooze]').forEach((b) => b.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const id = b.dataset.dcSnooze;
+    await changeDeal(id, 'entscheidung', addDaysIso(7));
+    lastApplied[id] = [`Nachgefasst – neue Entscheidung bis ${dateDe(addDaysIso(7))} (live zusätzlich als Notiz in Elwis)`];
+    refreshViews();
+  }));
 }
 
 function wireOrderTiles(root) {
@@ -427,7 +493,9 @@ function refreshViews() {
 }
 
 function openBoard() {
-  const url = new URL('board.html?v=1.3.1', location.href).toString();
+  const fp = state.ctx?.focus?.project;
+  const view = fp ? (provider.ordersForProject(fp.id).length ? '&view=orders' : '&view=sales') : '';
+  const url = new URL('board.html?v=1.4.0' + view, location.href).toString();
   if (state.inOutlook && Office.context.ui?.displayDialogAsync) {
     Office.context.ui.displayDialogAsync(url, { height: 90, width: 90, promptBeforeOpen: false }, (res) => {
       if (res.status !== Office.AsyncResultStatus.Succeeded) window.open(url, '_blank');
@@ -467,7 +535,7 @@ async function openProject(id) {
         <button class="btn" data-file="${p.id}">Anhänge ablegen</button>
       </div>
     </div>
-    ${renderOrderCards(p)}
+    ${renderStatusCards(p)}
     ${sec('Muster', p.samples, 'sample', docRow('sample'))}
     ${sec('Angebote', p.quotes, 'quote', docRow('quote'))}
     ${sec('Aufträge', p.orders, 'order', docRow('order'))}
@@ -512,6 +580,7 @@ function wireSheet() {
   s.querySelectorAll('[data-elwis]').forEach((b) => b.addEventListener('click', () => { const [k, o, id] = b.dataset.elwis.split('|'); openInElwis(k, o, id); }));
   s.querySelectorAll('[data-folder]').forEach((b) => b.addEventListener('click', () => openFolder(b.dataset.folder)));
   wireOrderTiles(s);
+  wireDealTiles(s);
   s.querySelectorAll('[data-file]').forEach((b) => b.addEventListener('click', () => openFileForm(b.dataset.file)));
 }
 

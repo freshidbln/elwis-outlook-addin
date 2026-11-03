@@ -32,3 +32,10 @@
 .oc-dates .oc-tile { grid-template-columns: 1fr; }
 .oc-applied { margin-top: 8px; font-size: 11.5px; background: #eef7f1; border: 1px solid #cfe8d8; color: #1f5f3d; border-radius: 6px; padding: 6px 8px; }
 .oc-applied div::before { content: "⚙ "; }
+
+/* Vertriebsstatus-Karte im Add-in */
+.dc-alert { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; font-size: 11.5px; background: #fdecee; border: 1px solid #f5c2ca; color: #8a1c2e; border-radius: 6px; padding: 7px 8px; }
+.dc-alert .btn { align-self: flex-start; }
+.dc-note { margin-top: 8px; font-size: 11.5px; background: #eaf4fb; border: 1px solid #c6e0f2; color: #1f4e79; border-radius: 6px; padding: 6px 8px; }
+.dc-handover { width: 100%; margin-top: 10px; justify-content: center; }
+.btn.small { font-size: 11.5px; padding: 4px 8px; }

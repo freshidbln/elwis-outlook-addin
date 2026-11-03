@@ -1,28 +1,66 @@
-// Board-Übersicht „Auftragsabwicklung“ – ersetzt das Monday-Board.
+// Board-Übersicht – ersetzt die Monday-Boards „Anfrage & Vertrieb“ und „Auftragsabwicklung“.
 // Datenquelle ist ausschließlich Elwis (Demo: Beispieldaten mit Browser-Speicher).
 import { CONFIG } from './config.js';
 import { provider } from './data.js';
-import { STATUS_FIELDS, FIELD, PHASES, PHASE, RULES, computePhase, colorOf } from './orders.js';
-import { statusChip, showPicker, escHtml as esc } from './status-ui.js';
+import { STATUS_FIELDS, PHASES, RULES, computePhase } from './orders.js';
+import { SALES_FIELDS, SALES_PHASES, SALES_RULES, computeSalesPhase, overdueDays } from './sales.js';
+import { statusChip, showPicker, colorOf, escHtml as esc, fmtDate } from './status-ui.js';
 
 if (typeof window.Office === 'undefined') window.Office = { onReady: (cb) => setTimeout(() => cb({ host: null }), 0) };
 
 const $ = (id) => document.getElementById(id);
 const money = (v, cur = 'EUR') => v == null || v === '' ? '' : new Intl.NumberFormat('de-DE', { style: 'currency', currency: cur, maximumFractionDigits: 0 }).format(v);
+const todayIso = () => { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; };
 
-const INFO_COLS = [
-  { key: 'pm', label: 'PM', w: 120 },
-  { key: 'seller', label: 'Verkäufer', w: 120 },
-  { key: 'contact', label: 'Kontakt', w: 130 },
-  { key: 'company', label: 'Unternehmen', w: 180 },
-  { key: 'sc', label: 'SC-Nr.', w: 80 },
-  { key: 'amount', label: 'Auftragswert', w: 105, align: 'right' }
-];
-const STATUS_W = (f) => f.type === 'date' ? 104 : 138;
+function orderOverdue(o, key) {
+  const v = o[key]; if (!v || v >= todayIso()) return false;
+  if (key === 'korriDate') return ['warte auf Freigabe', 'Verzögert', 'Angefordert'].includes(o.korri);
+  if (key === 'musterDate') return ['warte auf Freigabe', 'verzögert'].includes(o.muster);
+  if (key === 'fertig' || key === 'ltLief') return o.prod !== 'Fertiggestellt';
+  if (key === 'eta') return o.liefer !== 'Angekommen' && o.lieferung !== 'Ausgeliefert';
+  if (key === 'ltKunde') return !['Ausgeliefert', 'Fertig zum Abrechnen'].includes(o.lieferung) && o.liefer !== 'Angekommen';
+  return false;
+}
 
-let orders = [];
-const collapsed = new Set(['abruf']);
+const VIEWS = {
+  sales: {
+    tab: 'Anfrage & Vertrieb', sub: 'vor dem Auftrag', unit: ['Deal', 'Deals'],
+    fields: SALES_FIELDS, phases: SALES_PHASES, phaseOf: computeSalesPhase, rules: SALES_RULES,
+    collapsed: ['verloren', 'uebergeben'], person: 'seller', personLabel: 'Alle Verkäufer',
+    infoCols: [
+      { key: 'seller', label: 'Verkäufer', w: 120 }, { key: 'contact', label: 'Kontakt', w: 130 },
+      { key: 'company', label: 'Unternehmen', w: 180 }, { key: 'an', label: 'Angebots-Nr.', w: 100 },
+      { key: 'amount', label: 'Wert', w: 100, align: 'right' }, { key: 'received', label: 'Anfrage vom', w: 96, date: true }
+    ],
+    list: () => provider.listDeals(),
+    update: async (id, k, v) => { const r = await provider.updateDeal(id, k, v); return { item: r.deal, applied: r.applied, created: r.createdOrder }; },
+    overdue: (d, key) => key === 'entscheidung' && overdueDays(d, todayIso()) > 0,
+    badge: (d) => { const n = overdueDays(d, todayIso()); return n ? `<span class="od">überfällig ${n} T</span>` : (d.reactivated ? '<span class="od re">Wiedervorlage</span>' : ''); },
+    elwisKind: 'inquiry'
+  },
+  orders: {
+    tab: 'Auftragsabwicklung', sub: 'nach Auftragseingang', unit: ['Auftrag', 'Aufträge'],
+    fields: STATUS_FIELDS, phases: PHASES, phaseOf: computePhase, rules: RULES,
+    collapsed: ['abruf'], person: 'pm', personLabel: 'Alle PMs',
+    infoCols: [
+      { key: 'pm', label: 'PM', w: 120 }, { key: 'seller', label: 'Verkäufer', w: 120 }, { key: 'contact', label: 'Kontakt', w: 130 },
+      { key: 'company', label: 'Unternehmen', w: 180 }, { key: 'sc', label: 'SC-Nr.', w: 80 }, { key: 'amount', label: 'Auftragswert', w: 105, align: 'right' }
+    ],
+    list: () => provider.listOrders(),
+    update: async (id, k, v) => { const r = await provider.updateOrder(id, k, v); return { item: r.order, applied: r.applied }; },
+    overdue: orderOverdue,
+    badge: (o) => (o.okayToInvoice ? '<span class="okinv">Okay to Invoice</span>' : ''),
+    elwisKind: 'order'
+  }
+};
+
+let viewKey = new URLSearchParams(location.search).get('view') || (() => { try { return localStorage.getItem('elwis-board-view'); } catch { return null; } })() || 'sales';
+if (!VIEWS[viewKey]) viewKey = 'sales';
+let items = [];
+let collapsed = new Set(VIEWS[viewKey].collapsed);
 let flashId = null;
+const V = () => VIEWS[viewKey];
+const statusW = (f) => (f.type === 'date' ? 104 : 140);
 
 Office.onReady(() => setTimeout(init, 0));
 
@@ -30,68 +68,79 @@ async function init() {
   $('modeBadge').textContent = provider.isDemo ? 'Demo' : 'Live';
   $('resetBtn').hidden = !provider.isDemo;
   $('q').addEventListener('input', render);
-  $('pmFilter').addEventListener('change', render);
+  $('personFilter').addEventListener('change', render);
   $('officeFilter').addEventListener('change', render);
   $('rulesBtn').addEventListener('click', toggleRules);
   $('rulesClose').addEventListener('click', toggleRules);
   $('resetBtn').addEventListener('click', async () => { provider.resetOrders(); await load(); toast('Demo zurückgesetzt.'); });
-  window.addEventListener('storage', (e) => { if (e.key && e.key.startsWith('elwis-demo-orders')) load(); });
-  await load();
-  const pms = [...new Set(orders.map((o) => o.pm).filter(Boolean))].sort();
-  $('pmFilter').innerHTML = '<option value="">Alle PMs</option>' + pms.map((p) => `<option>${esc(p)}</option>`).join('');
+  document.querySelectorAll('[data-view]').forEach((b) => b.addEventListener('click', () => switchView(b.dataset.view)));
+  window.addEventListener('storage', (e) => { if (e.key && e.key.startsWith('elwis-demo-')) load(); });
+  await switchView(viewKey);
 }
 
-async function load() {
-  orders = await provider.listOrders();
+async function switchView(k) {
+  viewKey = k;
+  try { localStorage.setItem('elwis-board-view', k); } catch { /* egal */ }
+  collapsed = new Set(V().collapsed);
+  document.querySelectorAll('[data-view]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.view === k)));
+  document.title = `${V().tab} – Elwis`;
+  $('q').placeholder = k === 'sales' ? 'Deal, Kunde, PID, Angebots-Nr. suchen' : 'Auftrag, Kunde, SC-Nr. suchen';
+  $('rules').hidden = true;
+  await load();
+  const people = [...new Set(items.map((o) => o[V().person]).filter(Boolean))].sort();
+  $('personFilter').innerHTML = `<option value="">${V().personLabel}</option>` + people.map((p) => `<option>${esc(p)}</option>`).join('');
   render();
 }
 
+async function load() { items = await V().list(); render(); }
+
 function filtered() {
   const q = $('q').value.trim().toLowerCase();
-  const pm = $('pmFilter').value;
+  const person = $('personFilter').value;
   const office = $('officeFilter').value;
-  return orders.filter((o) =>
-    (!pm || o.pm === pm) && (!office || o.office === office) &&
-    (!q || [o.name, o.company, o.contact, o.sc, o.pid, o.number].join(' ').toLowerCase().includes(q)));
+  return items.filter((o) =>
+    (!person || o[V().person] === person) && (!office || o.office === office) &&
+    (!q || [o.name, o.company, o.contact, o.sc, o.pid, o.number, o.an].join(' ').toLowerCase().includes(q)));
 }
 
 function render() {
+  const v = V();
   const list = filtered();
-  const byPhase = Object.fromEntries(PHASES.map((p) => [p.key, []]));
-  list.forEach((o) => byPhase[computePhase(o)].push(o));
-  const totalW = 260 + INFO_COLS.reduce((s, c) => s + c.w, 0) + STATUS_FIELDS.reduce((s, f) => s + STATUS_W(f), 0) + 44;
+  const byPhase = Object.fromEntries(v.phases.map((p) => [p.key, []]));
+  list.forEach((o) => byPhase[v.phaseOf(o)].push(o));
+  const totalW = 260 + v.infoCols.reduce((s, c) => s + c.w, 0) + v.fields.reduce((s, f) => s + statusW(f), 0) + 44;
 
-  $('board').innerHTML = PHASES.map((ph) => {
+  $('board').innerHTML = v.phases.map((ph) => {
     const rows = byPhase[ph.key];
     const isCol = collapsed.has(ph.key);
     return `<section class="grp" style="--gc:${ph.color}">
       <button class="grp-head" data-toggle="${ph.key}" aria-expanded="${!isCol}">
         <span class="caret">${isCol ? '▸' : '▾'}</span><span class="grp-title">${esc(ph.label)}</span>
-        <span class="grp-count">${rows.length} ${rows.length === 1 ? 'Auftrag' : 'Aufträge'}</span>
+        <span class="grp-count">${rows.length} ${rows.length === 1 ? v.unit[0] : v.unit[1]}${isCol ? ' · eingeklappt' : ''}</span>
       </button>
       ${isCol ? '' : `<div class="tbl-wrap"><table class="tbl" style="width:${totalW}px">
-        <colgroup><col style="width:260px">${INFO_COLS.map((c) => `<col style="width:${c.w}px">`).join('')}${STATUS_FIELDS.map((f) => `<col style="width:${STATUS_W(f)}px">`).join('')}<col style="width:44px"></colgroup>
+        <colgroup><col style="width:260px">${v.infoCols.map((c) => `<col style="width:${c.w}px">`).join('')}${v.fields.map((f) => `<col style="width:${statusW(f)}px">`).join('')}<col style="width:44px"></colgroup>
         <thead><tr>
-          <th class="sticky">Auftrag</th>
-          ${INFO_COLS.map((c) => `<th class="ro" title="Kommt aus Elwis">${esc(c.label)}</th>`).join('')}
-          ${STATUS_FIELDS.map((f) => `<th title="${esc(f.label)}">${esc(f.short || f.label)}</th>`).join('')}
+          <th class="sticky">${viewKey === 'sales' ? 'Deal' : 'Auftrag'}</th>
+          ${v.infoCols.map((c) => `<th class="ro" title="Kommt aus Elwis">${esc(c.label)}</th>`).join('')}
+          ${v.fields.map((f) => `<th title="${esc(f.label)}">${esc(f.short || f.label)}</th>`).join('')}
           <th></th>
         </tr></thead>
-        <tbody>${rows.length ? rows.map(renderRow).join('') : `<tr><td class="sticky empty" colspan="${2 + INFO_COLS.length + STATUS_FIELDS.length}">Keine Aufträge in dieser Phase</td></tr>`}</tbody>
+        <tbody>${rows.length ? rows.map(renderRow).join('') : `<tr><td class="sticky empty" colspan="${2 + v.infoCols.length + v.fields.length}">Keine Einträge in dieser Gruppe</td></tr>`}</tbody>
         ${rows.length ? renderFooter(rows) : ''}
       </table></div>`}
     </section>`;
-  }).join('') + `<div class="b-foot">${list.length} von ${orders.length} Aufträgen · Gruppen werden aus den Status berechnet · ${provider.isDemo ? 'Demo-Daten, Änderungen nur in diesem Browser' : 'Daten live aus Elwis'}</div>`;
+  }).join('') + `<div class="b-foot">${list.length} von ${items.length} ${v.unit[1]} · Gruppen werden aus den Status berechnet · ${provider.isDemo ? 'Demo-Daten, Änderungen nur in diesem Browser' : 'Daten live aus Elwis'}</div>`;
 
   $('board').querySelectorAll('[data-toggle]').forEach((b) => b.addEventListener('click', () => {
     const k = b.dataset.toggle; collapsed.has(k) ? collapsed.delete(k) : collapsed.add(k); render();
   }));
   $('board').querySelectorAll('[data-cell]').forEach((td) => td.addEventListener('click', () => {
     const [id, key] = td.dataset.cell.split('|');
-    const o = orders.find((x) => x.id === id);
+    const o = items.find((x) => x.id === id);
     showPicker(td, key, o[key] || '', (val) => change(id, key, val));
   }));
-  $('board').querySelectorAll('[data-open]').forEach((b) => b.addEventListener('click', () => openInElwis(orders.find((x) => x.id === b.dataset.open))));
+  $('board').querySelectorAll('[data-open]').forEach((b) => b.addEventListener('click', () => openInElwis(items.find((x) => x.id === b.dataset.open))));
   if (flashId) {
     const tr = document.querySelector(`tr[data-id="${flashId}"]`);
     if (tr) { tr.classList.add('flash'); tr.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
@@ -100,81 +149,87 @@ function render() {
 }
 
 function renderRow(o) {
+  const v = V();
   return `<tr data-id="${o.id}">
     <td class="sticky name">
       <div class="n-main">${esc(o.name)}</div>
-      <div class="n-sub">${o.pid ? esc(o.pid) + ' · ' : ''}${esc(o.office || '')}${o.okayToInvoice ? ' · <span class="okinv">Okay to Invoice</span>' : ''}</div>
+      <div class="n-sub">${o.pid ? esc(o.pid) + ' · ' : ''}${esc(o.office || '')} ${v.badge(o)}</div>
     </td>
-    ${INFO_COLS.map((c) => `<td class="ro${c.align === 'right' ? ' right' : ''}">${c.key === 'amount' ? money(o.amount, o.currency) : esc(o[c.key] || '')}</td>`).join('')}
-    ${STATUS_FIELDS.map((f) => `<td class="st${f.type === 'date' ? ' dt' : ''}${f.type === 'date' && isOverdue(o, f.key) ? ' late' : ''}" data-cell="${o.id}|${f.key}" title="${esc(f.label)}">${statusChip(f.key, o[f.key], { full: f.type !== 'date' })}</td>`).join('')}
-    <td class="ro"><button class="open-btn" data-open="${o.id}" title="Auftrag in Elwis öffnen">↗</button></td>
+    ${v.infoCols.map((c) => `<td class="ro${c.align === 'right' ? ' right' : ''}">${c.key === 'amount' ? money(o.amount, o.currency) : c.date ? fmtDate(o[c.key]) : (c.key === 'sc' && !o.sc && o.fromDeal) ? '<span class="neu-sc" title="SC-Nummer vergibt Elwis beim Anlegen der Sales Order">neu</span>' : esc(o[c.key] || '')}</td>`).join('')}
+    ${v.fields.map((f) => `<td class="st${f.type === 'date' ? ' dt' : ''}${f.type === 'date' && v.overdue(o, f.key) ? ' late' : ''}" data-cell="${o.id}|${f.key}" title="${esc(f.label)}">${statusChip(f.key, o[f.key], { full: f.type !== 'date' })}</td>`).join('')}
+    <td class="ro"><button class="open-btn" data-open="${o.id}" title="In Elwis öffnen">↗</button></td>
   </tr>`;
 }
 
-function isOverdue(o, key) {
-  const v = o[key]; if (!v) return false;
-  const t = new Date(); const today = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
-  if (v >= today) return false;
-  if (key === 'korriDate') return ['warte auf Freigabe', 'Verzögert', 'Angefordert'].includes(o.korri);
-  if (key === 'musterDate') return ['warte auf Freigabe', 'verzögert'].includes(o.muster);
-  if (key === 'fertig' || key === 'ltLief') return o.prod !== 'Fertiggestellt';
-  if (key === 'eta') return !['Angekommen'].includes(o.liefer) && o.lieferung !== 'Ausgeliefert';
-  if (key === 'ltKunde') return o.lieferung !== 'Ausgeliefert' && o.liefer !== 'Angekommen' && o.lieferung !== 'Fertig zum Abrechnen';
-  return false;
-}
-
 function renderFooter(rows) {
+  const v = V();
   const sums = {};
   rows.forEach((o) => { if (o.amount) sums[o.currency || 'EUR'] = (sums[o.currency || 'EUR'] || 0) + o.amount; });
-  const sumTxt = Object.entries(sums).map(([c, v]) => money(v, c)).join('<br>');
+  const sumTxt = Object.entries(sums).map(([c, n]) => money(n, c)).join('<br>');
   const bar = (f) => {
     if (f.type === 'date') return '';
-    const counts = {}; rows.forEach((o) => { const v = o[f.key] || ''; counts[v] = (counts[v] || 0) + 1; });
+    const counts = {}; rows.forEach((o) => { const val = o[f.key] || ''; counts[val] = (counts[val] || 0) + 1; });
     return `<div class="dist" title="${esc(Object.entries(counts).map(([k, n]) => `${k || 'leer'}: ${n}`).join(', '))}">` +
-      Object.entries(counts).map(([v, n]) => `<span style="flex:${n};background:${v ? colorOf(f.key, v) : '#d9dee5'}"></span>`).join('') + '</div>';
+      Object.entries(counts).map(([val, n]) => `<span style="flex:${n};background:${val ? colorOf(f.key, val) : '#d9dee5'}"></span>`).join('') + '</div>';
   };
   return `<tfoot><tr>
     <td class="sticky"></td>
-    ${INFO_COLS.map((c) => `<td class="${c.key === 'amount' ? 'right sum' : ''}">${c.key === 'amount' ? `${sumTxt}<div class="sum-l">Summe</div>` : ''}</td>`).join('')}
-    ${STATUS_FIELDS.map((f) => `<td>${bar(f)}</td>`).join('')}<td></td>
+    ${v.infoCols.map((c) => `<td class="${c.key === 'amount' ? 'right sum' : ''}">${c.key === 'amount' ? `${sumTxt}<div class="sum-l">Summe</div>` : ''}</td>`).join('')}
+    ${v.fields.map((f) => `<td>${bar(f)}</td>`).join('')}<td></td>
   </tr></tfoot>`;
 }
 
 async function change(id, key, val) {
-  const before = computePhase(orders.find((o) => o.id === id));
-  const r = await provider.updateOrder(id, key, val);
-  orders = orders.map((o) => (o.id === id ? r.order : o));
-  if (computePhase(r.order) !== before) { flashId = id; collapsed.delete(computePhase(r.order)); }
+  const v = V();
+  const before = v.phaseOf(items.find((o) => o.id === id));
+  const r = await v.update(id, key, val);
+  items = items.map((o) => (o.id === id ? r.item : o));
+  const after = v.phaseOf(r.item);
+  if (after !== before) { flashId = id; collapsed.delete(after); }
   render();
-  toast(r.applied.length ? `Gespeichert. ${r.applied.join(' · ')}` : 'Gespeichert.', true);
+  let msg = r.applied.length ? `Gespeichert. ${r.applied.join(' · ')}` : 'Gespeichert.';
+  if (r.created) msg += ' → In „Auftragsabwicklung“ wechseln, um den neuen Auftrag zu sehen.';
+  toast(msg, true);
 }
 
 function openInElwis(o) {
   if (!o) return;
-  const kind = 'order';
+  const kind = V().elwisKind;
+  const office = o.office || 'NBG';
   const url = provider.isDemo
-    ? `${CONFIG.elwisBaseUrl}/${CONFIG.listPages[o.office || 'NBG'][kind]}`
-    : `${CONFIG.elwisBaseUrl}/${CONFIG.detailPages[o.office || 'NBG'][kind]}?artifactId=${encodeURIComponent(o.id)}`;
-  if (provider.isDemo) toast('Demo: Es öffnet sich die Auftragsliste in Elwis. Live direkt der Auftrag.');
+    ? `${CONFIG.elwisBaseUrl}/${CONFIG.listPages[office][kind]}`
+    : `${CONFIG.elwisBaseUrl}/${CONFIG.detailPages[office][kind]}?artifactId=${encodeURIComponent(o.projectId || o.id)}`;
+  if (provider.isDemo) toast('Demo: Es öffnet sich die passende Liste in Elwis. Live direkt der Datensatz.');
   window.open(url, '_blank', 'noopener');
 }
 
 function toggleRules() {
   const r = $('rules');
+  const v = V();
   if (r.hidden) {
+    const change = v.rules.filter((x) => !x.id.startsWith('T'));
+    const daily = v.rules.filter((x) => x.id.startsWith('T'));
+    const fieldRows = viewKey === 'sales'
+      ? SALES_FIELDS.map((f) => `<tr><td>${esc(f.label)}</td><td>${esc(f.elwis || '')}</td></tr>`).join('') +
+        `<tr><td colspan="2" class="sub-h">Werte des Vertriebsstatus</td></tr>` +
+        SALES_FIELDS[0].options.map(([l, , m]) => `<tr><td>${esc(l)}</td><td>${/^neu/.test(m) ? `<span class="neu">${esc(m)}</span>` : esc(m)}</td></tr>`).join('') +
+        `<tr><td>Verkäufer, Kontakt, Unternehmen, PID, Angebots-Nr., Wert, Anfrage vom</td><td>vorhanden (werden nur angezeigt)</td></tr>`
+      : STATUS_FIELDS.map((f) => `<tr><td>${esc(f.label)}</td><td>${f.elwis ? `vorhanden: ${esc(f.elwis)}` : '<span class="neu">neu anlegen</span>'}</td></tr>`).join('') +
+        `<tr><td>PM, Verkäufer, Kontakt, Unternehmen, SC-Nr., Auftragswert</td><td>vorhanden (werden nur angezeigt)</td></tr>`;
     $('rulesBody').innerHTML = `
-      <p class="muted">Diese Regeln ersetzen die 20 Monday-Automationen. Live laufen sie als Server-Abläufe in Elwis – egal, ob der Status in Elwis, im Outlook-Add-in oder in dieser Übersicht geändert wird.</p>
+      <p class="muted">${viewKey === 'sales'
+        ? 'Diese Regeln ersetzen die 22 Automationen des Monday-Boards „Anfrage & Vertrieb“.'
+        : 'Diese Regeln ersetzen die 20 Automationen des Monday-Boards „Auftragsabwicklung“.'}
+        Live laufen sie als Server-Abläufe in Elwis – egal, ob der Status in Elwis, im Outlook-Add-in oder in dieser Übersicht geändert wird.</p>
+      ${viewKey === 'sales' ? '<p class="muted"><b>Wichtig:</b> „Überfällig“ ist hier ein Hinweis und kein Status. In Monday hat „Überfällig“ den eigentlichen Status überschrieben – dadurch ging verloren, ob ein Angebot beim Kunden lag oder noch in Verhandlung war.</p>' : ''}
       <h4>Bei Statusänderung</h4>
-      ${RULES.filter((x) => x.id.startsWith('R')).map((x) => `<div class="rule"><b>${x.id}</b><div><div>Wenn ${esc(x.when)}</div><div class="then">→ ${esc(x.then)}</div></div></div>`).join('')}
+      ${change.map((x) => `<div class="rule"><b>${x.id}</b><div><div>Wenn ${esc(x.when)}</div><div class="then">→ ${esc(x.then)}</div></div></div>`).join('')}
       <h4>Täglich (Termine)</h4>
-      ${RULES.filter((x) => x.id.startsWith('T')).map((x) => `<div class="rule"><b>${x.id}</b><div><div>${esc(x.when.replace('Täglich: ', ''))}</div><div class="then">→ ${esc(x.then)}</div></div></div>`).join('')}
-      <h4>Gruppen (Phasen)</h4>
-      <p class="muted">Werden automatisch aus den Status berechnet – niemand muss Aufträge verschieben.</p>
-      <h4>Felder am Elwis-Auftrag</h4>
-      <table class="map"><thead><tr><th>Feld</th><th>In Elwis</th></tr></thead><tbody>
-        ${STATUS_FIELDS.map((f) => `<tr><td>${esc(f.label)}</td><td>${f.elwis ? `vorhanden: ${esc(f.elwis)}` : '<span class="neu">neu anlegen</span>'}</td></tr>`).join('')}
-        <tr><td>PM, Verkäufer, Kontakt, Unternehmen, SC-Nr., Auftragswert</td><td>vorhanden (werden nur angezeigt)</td></tr>
-      </tbody></table>`;
+      ${daily.map((x) => `<div class="rule"><b>${x.id}</b><div><div>${esc(x.when.replace('Täglich: ', ''))}</div><div class="then">→ ${esc(x.then)}</div></div></div>`).join('')}
+      <h4>Gruppen</h4>
+      <p class="muted">Werden automatisch aus den Status berechnet – niemand muss Einträge verschieben.</p>
+      <h4>Felder in Elwis</h4>
+      <table class="map"><thead><tr><th>Feld</th><th>In Elwis</th></tr></thead><tbody>${fieldRows}</tbody></table>`;
   }
   r.hidden = !r.hidden;
 }
@@ -182,5 +237,5 @@ function toggleRules() {
 let tt;
 function toast(msg, ok = false) {
   const t = $('toast'); t.textContent = msg; t.classList.toggle('ok', ok); t.hidden = false;
-  clearTimeout(tt); tt = setTimeout(() => { t.hidden = true; }, 5000);
+  clearTimeout(tt); tt = setTimeout(() => { t.hidden = true; }, 6000);
 }

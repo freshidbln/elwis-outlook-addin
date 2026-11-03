@@ -76,3 +76,14 @@ tr.flash td { animation: flash 2.2s ease-out; }
 .b-toast.ok { background: #1f5f3d; }
 
 @media (max-width: 760px) { .bh-search input { width: 160px; } }
+
+/* Board-Umschalter Vertrieb → Auftragsabwicklung */
+.bh-tabs { display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,.1); border-radius: 8px; padding: 3px; }
+.bh-tab { font: inherit; font-size: 13.5px; font-weight: 700; color: rgba(255,255,255,.75); background: transparent; border: 0; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+.bh-tab[aria-selected="true"] { background: #fff; color: var(--navy); }
+.bh-tab:hover:not([aria-selected="true"]) { background: rgba(255,255,255,.14); color: #fff; }
+.bh-arrow { color: rgba(255,255,255,.55); font-size: 13px; }
+.od { display: inline-block; margin-left: 4px; font-size: 10px; font-weight: 700; color: #fff; background: #e2445c; border-radius: 8px; padding: 0 6px; }
+.od.re { background: #0086c0; }
+.rules-body .sub-h { font-weight: 700; color: var(--muted); padding-top: 10px; }
+.neu-sc { font-size: 10.5px; font-weight: 700; color: #0086c0; background: #e5f3fa; border-radius: 8px; padding: 1px 6px; }

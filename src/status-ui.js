@@ -1,5 +1,13 @@
 // Gemeinsame Bausteine für Status-Anzeige und -Auswahl (Add-in und Board)
-import { FIELD, colorOf } from './orders.js';
+import { FIELD as ORDER_FIELD } from './orders.js';
+import { SALES_FIELD } from './sales.js';
+
+// Felder aus Auftragsabwicklung und Vertrieb (Schlüssel sind eindeutig)
+const FIELD = { ...ORDER_FIELD, ...SALES_FIELD };
+export function colorOf(key, value) {
+  const o = FIELD[key]?.options?.find((x) => x[0] === value);
+  return o ? o[1] : null;
+}
 
 export const escHtml = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 export const fmtDate = (iso) => { if (!iso) return ''; const [y, m, d] = iso.split('-'); return `${d}.${m}.${y.slice(2)}`; };
