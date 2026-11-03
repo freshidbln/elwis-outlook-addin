@@ -182,7 +182,8 @@ function renderFooter(rows) {
 async function change(id, key, val) {
   const v = V();
   const before = v.phaseOf(items.find((o) => o.id === id));
-  const r = await v.update(id, key, val);
+  let r;
+  try { r = await v.update(id, key, val); } catch (err) { toast(err.message); return; }
   items = items.map((o) => (o.id === id ? r.item : o));
   const after = v.phaseOf(r.item);
   if (after !== before) { flashId = id; collapsed.delete(after); }

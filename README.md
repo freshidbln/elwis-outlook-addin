@@ -33,18 +33,23 @@ Tipp für die Demo: Echte Absender sind in den Beispieldaten nicht enthalten. Be
 bietet der Bereich Beispiel-E-Mails zum Durchklicken an. Wer sich selbst eine Mail mit dem Betreff
 `PID-3201-NBG` schickt, sieht die Projekt-Erkennung.
 
-## Auftragsstatus und Board (ersetzt Monday „Auftragsabwicklung“)
+## Vertrieb und Auftragsabwicklung (ersetzt die Monday-Boards)
 
-- **Statuskarte im Add-in:** Zum erkannten Projekt erscheint der Auftrag mit allen Status
-  (AB, US Dollar, Korrekturabzug, Shippingmarks, Freigabemuster, Produktion, Frachtweg,
-  Lieferstatus, Lieferung) und Terminen. Klick auf ein Feld ändert den Status.
-- **„Alle Aufträge“** (Button oben im Add-in) öffnet `board.html` als großes Fenster: Gruppen
-  nach Phase, Farbstatus wie in Monday, direktes Bearbeiten, Summen, Filter nach PM und Standort.
-- **Regeln** (`src/orders.js`) fassen die 20 Monday-Automationen zusammen (R1–R7 bei Änderung,
-  T1–T5 täglich nach Terminen). Die Gruppen werden aus den Status berechnet.
-- **Live-Betrieb:** Alle Werte liegen an der Elwis Sales Order (SC-Nummer = bisherige
-  Monday-Auftragsnummer), die Regeln laufen als Server-Abläufe in Elwis. Das Board zeigt im
-  Bereich „Regeln & Felder“, welche Felder in Elwis schon existieren und welche neu anzulegen sind.
+Ein Projekt hat im Add-in immer **genau eine Statuskarte**:
+
+- **Vor dem Auftrag: Vertriebsstatus** (Offen, Angefragt (Lieferant), Angebot schreiben, Raus an Kunden,
+  In Verhandlung, On Hold, Gewonnen, Verloren, Übergeben) mit Closing Chance, Priorität und
+  „Entscheidung bis“. Ist der Termin überschritten, erscheint ein Hinweis mit „Nachgefasst: +7 Tage“ –
+  der eigentliche Status bleibt erhalten (in Monday hat „Überfällig“ ihn überschrieben).
+- **Gewonnen → „An Auftragsabwicklung übergeben“** legt den Auftrag an; die Karte wechselt zum
+  **Auftragsstatus** (AB, US Dollar, Korrekturabzug, Shippingmarks, Freigabemuster, Produktion,
+  Frachtweg, Lieferstatus, Lieferung und Termine).
+- **„Übersicht“** (Button oben im Add-in) öffnet `board.html` mit zwei Ansichten im gleichen Look:
+  *Anfrage & Vertrieb* → *Auftragsabwicklung*. Gruppen werden aus den Status berechnet,
+  Status lassen sich direkt ändern, Summen und Filter (Verkäufer/PM, Standort).
+- **Regeln:** `src/sales.js` (V1–V5, T1–T2, ersetzt 22 Automationen) und `src/orders.js`
+  (R1–R7, T1–T5, ersetzt 20 Automationen). Live laufen sie als Server-Abläufe in Elwis.
+- **Felder:** „Regeln & Felder“ im Board zeigt, was in Elwis schon existiert und was neu anzulegen ist.
 - In der Demo werden Änderungen nur im Browser gespeichert („Demo zurücksetzen“ im Board).
 
 ## Aufbau
@@ -58,9 +63,11 @@ bietet der Bereich Beispiel-E-Mails zum Durchklicken an. Wer sich selbst eine Ma
 | `src/mock-data.js` | Erfundene Beispieldaten im Aufbau der Elwis-Typen |
 | `src/status.js` | Status-Werte und Farben wie in Elwis konfiguriert |
 | `src/config.js` | Modus (demo/live), Elwis-Adresse, Seiten für Direktlinks |
+| `src/sales.js` | Vertriebsstatus: Felder, Farben, Phasen, Regeln |
 | `src/orders.js` | Auftragsstatus: Felder, Farben, Phasen, Regeln |
+| `src/refs.js` | Erkennung von PID-, SC- und Belegnummern im Betreff (alle gelebten Schreibweisen) |
 | `src/status-ui.js`, `src/status-ui.css` | Status-Chips und Auswahl (Add-in und Board) |
-| `board.html`, `src/board.js`, `src/board.css` | Übersicht „Alle Aufträge“ |
+| `board.html`, `src/board.js`, `src/board.css` | Übersicht: Anfrage & Vertrieb, Auftragsabwicklung |
 | `backend/` | Vermittlungs-Backend für die Live-Version (nur lesend, noch nicht in Betrieb) |
 
 ## Live-Version (Stufe 1, nur lesend)
@@ -72,5 +79,8 @@ bietet der Bereich Beispiel-E-Mails zum Durchklicken an. Wer sich selbst eine Ma
    weiter seine Rechte. Das Backend speichert kein Passwort, nur die Elwis-Sitzung im Arbeitsspeicher.
 4. Das Backend blockiert technisch alle schreibenden Elwis-Aufrufe; erlaubt sind nur Lese- und
    Abfrage-Endpunkte.
+5. Endpunkte: `POST /api/session`, `POST /api/lookup` (Absender, PID, SC-Nummer, Belegnummer),
+   `GET /api/orders`, `GET /api/deals`. Statusänderungen (`PATCH /api/orders|deals/:id`) antworten
+   bewusst mit 501, bis das Schreiben freigegeben ist.
 
 Im Elwis-System muss dafür nichts geändert werden.

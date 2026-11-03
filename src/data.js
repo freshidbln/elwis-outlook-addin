@@ -212,7 +212,7 @@ class ApiProvider {
       headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}), ...(opts.headers || {}) }
     });
     if (res.status === 401) throw Object.assign(new Error('Nicht angemeldet'), { code: 401 });
-    if (!res.ok) throw new Error(`Fehler ${res.status}`);
+    if (!res.ok) { const j = await res.json().catch(() => ({})); throw Object.assign(new Error(j.error || `Fehler ${res.status}`), { code: res.status }); }
     return res.json();
   }
 

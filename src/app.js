@@ -446,11 +446,13 @@ function renderDealCard(d) {
 }
 
 async function changeDeal(id, key, val) {
-  const r = await provider.updateDeal(id, key, val);
+  let r;
+  try { r = await provider.updateDeal(id, key, val); } catch (err) { toast(err.message); return false; }
   lastApplied[id] = r.applied;
   if (r.createdOrder) lastApplied[r.createdOrder.id] = ['V5: Auftrag aus dem Vertrieb angelegt – jetzt Auftragsstatus pflegen'];
   toast(r.createdOrder ? 'Übergeben – der Auftrag ist jetzt in der Auftragsabwicklung.' : (r.applied.length ? `Gespeichert · ${r.applied.length} Regel(n) angewendet` : 'Gespeichert'), true);
   refreshViews();
+  return true;
 }
 
 function wireDealTiles(root) {
@@ -464,7 +466,7 @@ function wireDealTiles(root) {
   root.querySelectorAll('[data-dc-snooze]').forEach((b) => b.addEventListener('click', async (e) => {
     e.stopPropagation();
     const id = b.dataset.dcSnooze;
-    await changeDeal(id, 'entscheidung', addDaysIso(7));
+    if (!(await changeDeal(id, 'entscheidung', addDaysIso(7)))) return;
     lastApplied[id] = [`Nachgefasst – neue Entscheidung bis ${dateDe(addDaysIso(7))} (live zusätzlich als Notiz in Elwis)`];
     refreshViews();
   }));
@@ -476,7 +478,8 @@ function wireOrderTiles(root) {
     const [id, key] = b.dataset.oc.split('|');
     const cur = provider.getOrderSync(id)?.[key] || '';
     showPicker(b, key, cur, async (val) => {
-      const r = await provider.updateOrder(id, key, val);
+      let r;
+      try { r = await provider.updateOrder(id, key, val); } catch (err) { toast(err.message); return; }
       lastApplied[id] = r.applied;
       toast(r.applied.length ? `Gespeichert · ${r.applied.length} Regel(n) angewendet` : 'Gespeichert', true);
       refreshViews();
