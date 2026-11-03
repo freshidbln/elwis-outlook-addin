@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Auftragsabwicklung – Elwis</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <link rel="stylesheet" href="src/status-ui.css?v=1.2.0">
+  <link rel="stylesheet" href="src/board.css?v=1.2.0">
+</head>
+<body>
+  <header class="bh">
+    <img class="bh-logo" src="assets/icon-32.png" alt="">
+    <div class="bh-title">
+      <span class="t">Auftragsabwicklung</span>
+      <span class="s">Elwis · alle Aufträge</span>
+    </div>
+    <span id="modeBadge" class="bh-badge">Demo</span>
+    <div class="bh-spacer"></div>
+    <div class="bh-search">
+      <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M8.5 3a5.5 5.5 0 0 1 4.38 8.82l3.65 3.65a.75.75 0 1 1-1.06 1.06l-3.65-3.65A5.5 5.5 0 1 1 8.5 3Zm0 1.5a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/></svg>
+      <input id="q" type="search" placeholder="Auftrag, Kunde, SC-Nr. suchen" aria-label="Suchen">
+    </div>
+    <select id="pmFilter" aria-label="Nach PM filtern"><option value="">Alle PMs</option></select>
+    <select id="officeFilter" aria-label="Nach Standort filtern"><option value="">NBG + HKG</option><option>NBG</option><option>HKG</option></select>
+    <button id="rulesBtn" class="bh-btn">Regeln &amp; Felder</button>
+    <button id="resetBtn" class="bh-btn ghost" title="Alle Demo-Änderungen verwerfen">Demo zurücksetzen</button>
+  </header>
+
+  <main id="board" class="board" aria-live="polite"></main>
+
+  <aside id="rules" class="rules" hidden>
+    <div class="rules-head"><b>Regeln &amp; Felder</b><button id="rulesClose" class="bh-btn ghost">Schließen</button></div>
+    <div id="rulesBody" class="rules-body"></div>
+  </aside>
+
+  <div id="toast" class="b-toast" hidden role="status"></div>
+  <script type="module" src="src/board.js?v=1.2.0"></script>
+</body>
+</html>

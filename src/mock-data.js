@@ -137,3 +137,47 @@ export const FOLDER_TEMPLATE = [
   { key: 'invoice', name: '09 Rechnungen' },
   { key: 'correspondence', name: '10 Korrespondenz' }
 ];
+
+// ---------- Projektmanagement-Status der Aufträge (Demo) ----------
+// SC-Nummern sind erfunden. Live stehen diese Werte an der Elwis Sales Order.
+export const ORDER_PM = {
+  o1: { sc: '376901', ab: 'Raus an Kunden', usd: 'Nicht notwendig', korri: 'Freigegeben', korriDate: d(-25), marks: 'Freigegeben',
+        muster: 'Freigegeben', musterDate: d(-22), prod: 'in Produktion', fertig: d(4), fracht: 'Seefracht', liefer: '', eta: d(38), ltLief: d(4), ltKunde: d(44), lieferung: '' },
+  o4: { sc: '376788', ab: 'Raus an Kunden', usd: 'Nicht notwendig', korri: 'Freigegeben', korriDate: d(-70), marks: 'Nicht notwendig',
+        muster: 'ohne Freigabemuster', prod: 'Fertiggestellt', fertig: d(-45), fracht: 'LKW', liefer: 'Angekommen', eta: d(-38), ltLief: d(-45), ltKunde: d(-38), lieferung: 'Fertig zum Abrechnen' },
+  o6: { sc: '376865', ab: 'Raus an Kunden', usd: 'Erledigt', korri: 'Freigegeben', korriDate: d(-30), marks: 'Angefordert',
+        muster: 'Freigegeben', musterDate: d(-20), prod: 'in Produktion', fertig: d(8), fracht: 'Seefracht', liefer: '', eta: d(40), ltLief: d(8), ltKunde: d(45), lieferung: '' }
+};
+
+// Weitere Aufträge, damit die Board-Übersicht realistisch gefüllt ist (alle erfunden)
+const X = (o) => ({ kind: 'order', office: 'NBG', currency: 'EUR', usd: 'Nicht notwendig', lieferung: '', ...o });
+export const extraOrders = [
+  X({ id: 'x1', sc: '376931', name: 'Hoodies Teamevent', company: 'Velotec Fahrräder GmbH', contact: 'Jana Roth', pm: 'Anna Becker', seller: 'Jonas Weber', amount: 7400,
+      ab: 'in Arbeit', korri: 'Angefordert' }),
+  X({ id: 'x2', sc: '376934', name: 'Notizblöcke A5 mit Logo', company: 'Stadtwerke Elbtal', contact: 'Peter Lang', pm: 'Lea Wolf', seller: 'Lea Wolf', amount: 1850,
+      ab: 'Offen' }),
+  X({ id: 'x3', sc: '376936', name: 'Powerbank 10.000 mAh', company: 'Medivet Tiergesundheit GmbH', contact: 'Sabine Kurz', pm: 'Mara Hoffmann', seller: 'Mara Hoffmann', amount: 2790,
+      ab: 'in Arbeit', usd: 'Offen', korri: 'Angefordert' }),
+  X({ id: 'x4', sc: '376912', name: 'Kühltasche Sommeraktion', company: 'Bergquell Brauerei GmbH', contact: 'Tim Becker', pm: 'Anna Becker', seller: 'Tom Richter', amount: 11200,
+      ab: 'Raus an Kunden', korri: 'warte auf Freigabe', korriDate: d(-2), marks: 'Nicht notwendig', muster: 'ohne Freigabemuster', prod: 'Freigabeprozess', ltKunde: d(40) }),
+  X({ id: 'x5', sc: '376915', name: 'Lanyards Messe 2027', company: 'Nordwind Versicherung AG', contact: 'Clara Neumann', pm: 'Lea Wolf', seller: 'Jonas Weber', amount: 3100,
+      ab: 'Raus an Kunden', korri: 'Freigegeben', korriDate: d(-6), muster: 'warte auf Freigabe', musterDate: d(3), prod: 'Freigabeprozess', fracht: 'DHL etc./Kurier' }),
+  X({ id: 'x6', sc: '376918', name: 'Schlüsselbänder recycelt', company: 'Lumina Kosmetik GmbH', contact: 'Eva Martin', pm: 'Mara Hoffmann', seller: 'Mara Hoffmann', amount: 4650,
+      ab: 'Raus an Kunden', korri: 'warte auf Freigabe', korriDate: d(2), marks: 'Angefordert', muster: 'mit Freigabemuster', prod: 'Freigabeprozess' }),
+  X({ id: 'x7', sc: '376874', name: 'Regenschirme mit Logo', company: 'Nordwind Versicherung AG', contact: 'Clara Neumann', pm: 'Lea Wolf', seller: 'Lea Wolf', amount: 18900,
+      ab: 'Raus an Kunden', korri: 'Freigegeben', korriDate: d(-20), marks: 'Freigegeben', muster: 'ohne Freigabemuster', prod: 'in Produktion', fertig: d(10), fracht: 'Seefracht', ltLief: d(10), ltKunde: d(55) }),
+  X({ id: 'x8', sc: '376869', name: 'Glasflaschen mit Gravur', company: 'Bergquell Brauerei GmbH', contact: 'Tim Becker', pm: 'Anna Becker', seller: 'Tom Richter', amount: 26400,
+      ab: 'Raus an Kunden', usd: 'Erledigt', korri: 'Freigegeben', korriDate: d(-28), marks: 'Freigegeben', muster: 'Freigegeben', musterDate: d(-18), prod: 'in Produktion', fertig: d(-3), fracht: 'Zugfracht', ltLief: d(-3), ltKunde: d(30) }),
+  X({ id: 'x9', sc: '376841', name: 'Bierbank-Garnituren Branding', company: 'Bergquell Brauerei GmbH', contact: 'Tim Becker', pm: 'Anna Becker', seller: 'Tom Richter', amount: 38500,
+      ab: 'Raus an Kunden', korri: 'Freigegeben', marks: 'Freigegeben', muster: 'ohne Freigabemuster', prod: 'Fertiggestellt', fertig: d(-14), fracht: 'Seefracht', liefer: 'Unterwegs', eta: d(12), ltLief: d(-14), ltKunde: d(18) }),
+  X({ id: 'x10', sc: '376852', name: 'Sporttaschen Team', company: 'Velotec Fahrräder GmbH', contact: 'Jana Roth', pm: 'Mara Hoffmann', seller: 'Jonas Weber', amount: 9800,
+      ab: 'Raus an Kunden', korri: 'Freigegeben', muster: 'ohne Freigabemuster', prod: 'Fertiggestellt', fertig: d(-9), fracht: 'LKW', liefer: 'Unterwegs', eta: d(-1), ltKunde: d(3) }),
+  X({ id: 'x11', sc: '376829', name: 'Kugelschreiber Metall', company: 'Stadtwerke Elbtal', contact: 'Peter Lang', pm: 'Lea Wolf', seller: 'Lea Wolf', amount: 2300,
+      ab: 'Raus an Kunden', korri: 'Freigegeben', muster: 'ohne Freigabemuster', prod: 'Fertiggestellt', fertig: d(-5), fracht: 'DHL etc./Kurier', liefer: 'Nachlauf/Auslieferung', ltLief: d(1), ltKunde: d(2) }),
+  X({ id: 'x12', sc: '376815', name: 'Tassen Weihnachten', company: 'Medivet Tiergesundheit GmbH', contact: 'Sabine Kurz', pm: 'Mara Hoffmann', seller: 'Mara Hoffmann', amount: 5200,
+      ab: 'Raus an Kunden', korri: 'Freigegeben', muster: 'ohne Freigabemuster', prod: 'Fertiggestellt', fertig: d(-20), fracht: 'DHL etc./Kurier', liefer: 'Angekommen', ltKunde: d(-8), lieferung: 'Ausgeliefert' }),
+  X({ id: 'x13', sc: '375990', name: 'Abruf Namensschilder Q4', company: 'Nordwind Versicherung AG', contact: 'Clara Neumann', pm: 'Lea Wolf', seller: 'Lea Wolf', amount: 560, abruf: true,
+      ab: 'Raus an Kunden', korri: 'Freigegeben', muster: 'ohne Freigabemuster' }),
+  X({ id: 'x14', sc: '375512', name: 'Abruf Flyer Messe', company: 'Lumina Kosmetik GmbH', contact: 'Eva Martin', pm: 'Mara Hoffmann', seller: 'Mara Hoffmann', amount: 1250, abruf: true,
+      ab: 'Raus an Kunden', muster: 'ohne Freigabemuster' })
+];

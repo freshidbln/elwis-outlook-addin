@@ -2,6 +2,8 @@ import { CONFIG } from './config.js';
 import { provider } from './data.js';
 import { status, KIND_LABEL } from './status.js';
 import { demoEmails, STAFF } from './mock-data.js';
+import { STATUS_FIELDS, PHASE, computePhase } from './orders.js';
+import { statusChip, showPicker, closePicker } from './status-ui.js';
 
 // Falls office.js nicht geladen werden konnte (z. B. lokale Vorschau ohne Internet)
 if (typeof window.Office === 'undefined') {
@@ -54,6 +56,9 @@ function start(info) {
 
 function bindUi() {
   $('refreshBtn').addEventListener('click', () => state.inOutlook ? loadFromOutlook() : loadMail(state.mail));
+  $('boardBtn').addEventListener('click', openBoard);
+  // Änderungen aus dem Board-Fenster übernehmen (Demo: gemeinsamer Browser-Speicher)
+  window.addEventListener('storage', (e) => { if (e.key && e.key.startsWith('elwis-demo-orders') && state.ctx) refreshViews(); });
   $('sheetBack').addEventListener('click', closeSheet);
   $('sheetBackdrop').addEventListener('click', closeSheet);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
@@ -124,6 +129,7 @@ function renderHome() {
   parts.push(`<div class="mailctx">${mail.mode === 'compose' ? 'An:' : 'Von:'} <b>${esc(mail.fromName || mail.fromEmail || 'unbekannt')}</b> <span>${esc(mail.fromEmail || '')}</span></div>`);
 
   if (ctx.focus) parts.push(renderFocus(ctx.focus));
+  if (ctx.focus?.project) parts.push(renderOrderCards(ctx.focus.project));
 
   if (!ctx.contact) {
     parts.push(renderUnknown(mail));
@@ -275,9 +281,11 @@ function renderRow(x) {
     ? (x.openAmount > 0 ? `offen ${money(x.openAmount, x.currency)} · fällig ${dateDe(x.due)}` : `bezahlt · ${dateDe(x.date)}`)
     : x.kind === 'quote' ? `gültig bis ${dateDe(x.validTo)}`
     : x.kind === 'order' ? (x.etd ? `ETD ${dateDe(x.etd)}` : dateDe(x.date)) : dateDe(x.date);
+  const ov = x.kind === 'order' ? provider.getOrderSync(x.id) : null;
+  const ph = ov ? PHASE[computePhase(ov)] : null;
   return `<button class="row" data-open-doc="${p.id}|${x.id}">
     <span class="r-title">${esc(x.name)}</span>
-    <span class="r-right">${badge(x.kind, x.status)}<span>${money(x.amount, x.currency)}</span></span>
+    <span class="r-right">${ph ? `<span class="ph-chip" style="background:${ph.color}" title="${esc(ph.label)}">${esc(ph.short)}</span>` : badge(x.kind, x.status)}<span>${money(x.amount, x.currency)}</span></span>
     <span class="r-sub">${esc(x.number || '')} · ${esc(p.pid)} · ${extra}</span>
   </button>`;
 }
@@ -320,6 +328,7 @@ function wireView() {
   v.querySelectorAll('[data-open-doc]').forEach((b) => b.addEventListener('click', () => { const [pid, did] = b.dataset.openDoc.split('|'); openDoc(pid, did); }));
   v.querySelectorAll('[data-elwis]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); const [k, o, id] = b.dataset.elwis.split('|'); openInElwis(k, o, id); }));
   v.querySelectorAll('[data-folder]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); openFolder(b.dataset.folder); }));
+  wireOrderTiles(v);
   v.querySelectorAll('[data-action="file"]').forEach((b) => b.addEventListener('click', () => openFileForm()));
   v.querySelectorAll('[data-action="note"]').forEach((b) => b.addEventListener('click', openNoteForm));
   v.querySelectorAll('[data-action="task"]').forEach((b) => b.addEventListener('click', openTaskForm));
@@ -354,7 +363,74 @@ function openSheet(title, html) {
   $('sheetBackdrop').hidden = false;
   $('sheetBody').scrollTop = 0;
 }
-function closeSheet() { $('sheet').hidden = true; $('sheetBackdrop').hidden = true; }
+function closeSheet() { $('sheet').hidden = true; $('sheetBackdrop').hidden = true; state.sheetProject = null; closePicker(); }
+
+// ---------- Auftragsstatus (Projektmanagement) ----------
+const lastApplied = {};
+const DATE_KEYS = STATUS_FIELDS.filter((f) => f.type === 'date');
+const ENUM_KEYS = STATUS_FIELDS.filter((f) => f.type !== 'date');
+
+function renderOrderCards(p) {
+  const orders = p.orders || [];
+  if (!orders.length) {
+    return `<div class="card"><div class="card-label">Auftragsstatus</div>
+      <div class="subtitle">Noch kein Auftrag. Die Statuskarte erscheint, sobald in Elwis ein Auftrag (Sales Order) zu diesem Projekt existiert.</div></div>`;
+  }
+  return orders.map((base) => {
+    const o = provider.getOrderSync(base.id) || base;
+    const ph = PHASE[computePhase(o)];
+    const tile = (f) => `<button class="oc-tile" data-oc="${o.id}|${f.key}" title="${esc(f.label)} ändern">
+        <span class="lbl">${esc(f.short || f.label)}</span>${statusChip(f.key, o[f.key])}</button>`;
+    const applied = lastApplied[o.id];
+    return `<div class="card">
+      <div class="card-label">Auftragsstatus</div>
+      <div class="oc-head">
+        <div class="title" style="font-size:13px">${esc(o.name)}</div>
+        <span class="oc-phase" style="background:${ph.color}" title="${esc(ph.label)}">${esc(ph.short)}</span>
+      </div>
+      <div class="subtitle">SC ${esc(o.sc || '–')} · Auftrag ${esc(o.number || '')} · PM ${esc(o.pm || '–')}</div>
+      <div class="oc-grid">${ENUM_KEYS.map(tile).join('')}</div>
+      <div class="mini-title" style="margin-top:10px">Termine</div>
+      <div class="oc-dates">${DATE_KEYS.map(tile).join('')}</div>
+      ${applied?.length ? `<div class="oc-applied">${applied.map((a) => `<div>${esc(a)}</div>`).join('')}</div>` : ''}
+      <div class="stage2">Klick auf ein Feld ändert den Status${provider.isDemo ? ' (Demo: nur in diesem Browser gespeichert)' : ' direkt in Elwis'}.</div>
+    </div>`;
+  }).join('');
+}
+
+function wireOrderTiles(root) {
+  root.querySelectorAll('[data-oc]').forEach((b) => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const [id, key] = b.dataset.oc.split('|');
+    const cur = provider.getOrderSync(id)?.[key] || '';
+    showPicker(b, key, cur, async (val) => {
+      const r = await provider.updateOrder(id, key, val);
+      lastApplied[id] = r.applied;
+      toast(r.applied.length ? `Gespeichert · ${r.applied.length} Regel(n) angewendet` : 'Gespeichert', true);
+      refreshViews();
+    });
+  }));
+}
+
+function refreshViews() {
+  if (state.ctx && !$('search').value.trim()) renderHome();
+  if (state.sheetProject && !$('sheet').hidden) {
+    const top = $('sheetBody').scrollTop;
+    openProject(state.sheetProject).then(() => { $('sheetBody').scrollTop = top; });
+  }
+}
+
+function openBoard() {
+  const url = new URL('board.html?v=1.2.0', location.href).toString();
+  if (state.inOutlook && Office.context.ui?.displayDialogAsync) {
+    Office.context.ui.displayDialogAsync(url, { height: 90, width: 90, promptBeforeOpen: false }, (res) => {
+      if (res.status !== Office.AsyncResultStatus.Succeeded) window.open(url, '_blank');
+      else res.value.addEventHandler(Office.EventType.DialogEventReceived, () => refreshViews());
+    });
+  } else {
+    window.open(url, '_blank');
+  }
+}
 
 async function openProject(id) {
   const p = await provider.getProject(id);
@@ -364,6 +440,7 @@ async function openProject(id) {
       <span class="r-title">${esc(x.name)}</span>
       <span class="r-right">${badge(kind, x.status)}${x.amount ? `<span>${money(x.amount, x.currency)}</span>` : ''}</span>
       <span class="r-sub">${esc(x.number || '')}${x.number ? ' · ' : ''}${dateDe(x.date)}${kind === 'shipment' && x.eta ? ' · ETA ' + dateDe(x.eta) : ''}</span></button>`;
+  state.sheetProject = p.id;
   openSheet(p.pid, `
     <div class="card">
       <div class="title-row"><div class="title">${esc(p.name)}</div>${badge('inquiry', p.status)}</div>
@@ -384,6 +461,7 @@ async function openProject(id) {
         <button class="btn" data-file="${p.id}">Anhänge ablegen</button>
       </div>
     </div>
+    ${renderOrderCards(p)}
     ${sec('Muster', p.samples, 'sample', docRow('sample'))}
     ${sec('Angebote', p.quotes, 'quote', docRow('quote'))}
     ${sec('Aufträge', p.orders, 'order', docRow('order'))}
@@ -427,6 +505,7 @@ function wireSheet() {
   s.querySelectorAll('[data-open-project]').forEach((b) => b.addEventListener('click', () => openProject(b.dataset.openProject)));
   s.querySelectorAll('[data-elwis]').forEach((b) => b.addEventListener('click', () => { const [k, o, id] = b.dataset.elwis.split('|'); openInElwis(k, o, id); }));
   s.querySelectorAll('[data-folder]').forEach((b) => b.addEventListener('click', () => openFolder(b.dataset.folder)));
+  wireOrderTiles(s);
   s.querySelectorAll('[data-file]').forEach((b) => b.addEventListener('click', () => openFileForm(b.dataset.file)));
 }
 

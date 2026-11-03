@@ -3,10 +3,50 @@
 //   search(query)                -> Trefferliste
 //   getProject(id)               -> Projekt mit allen Vorgängen
 //   saveNote(payload), createTask(payload)   (Stufe 2)
+//   listOrders(), getOrderSync(id), updateOrder(id, key, value)   (Auftragsstatus / Board)
 // MockProvider liefert Beispieldaten, ApiProvider spricht mit dem Backend.
 
 import { CONFIG } from './config.js';
-import { companies, contacts, projects, FOLDER_TEMPLATE } from './mock-data.js';
+import { companies, contacts, projects, FOLDER_TEMPLATE, ORDER_PM, extraOrders } from './mock-data.js';
+import { applyChange, applyDateRules, todayIso } from './orders.js';
+
+// ---------- Demo-Speicher für Auftragsstatus ----------
+// Live liegen die Werte an der Elwis Sales Order. In der Demo werden Änderungen im
+// Browser gespeichert, damit Add-in und Board-Fenster denselben Stand zeigen.
+const LS_KEY = 'elwis-demo-orders-v1';
+function loadPatches() { try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch { return {}; } }
+function savePatches(p) { try { localStorage.setItem(LS_KEY, JSON.stringify(p)); } catch { /* ohne Speicher: nur im Speicher */ } }
+let memPatches = loadPatches();
+
+function baseOrders() {
+  const out = [];
+  projects.forEach((p) => (p.orders || []).forEach((o) => {
+    const company = companies.find((c) => c.id === p.companyId);
+    const contact = contacts.find((c) => c.id === p.contactId);
+    out.push({ ...o, ...(ORDER_PM[o.id] || {}), projectId: p.id, pid: p.pid, office: p.office, company: company?.name || '',
+      contact: contact?.name || '', pm: p.projectLead, seller: (p.team || [])[1] || p.projectLead, amount: o.amount, currency: o.currency });
+  }));
+  extraOrders.forEach((o) => out.push({ ...o }));
+  return out;
+}
+function mergedOrder(base) {
+  memPatches = loadPatches();
+  const withPatch = { ...base, ...(memPatches[base.id] || {}) };
+  return applyDateRules(withPatch, todayIso()).order;
+}
+export const demoOrders = {
+  all: () => baseOrders().map(mergedOrder),
+  get: (id) => { const b = baseOrders().find((o) => o.id === id); return b ? mergedOrder(b) : null; },
+  update(id, key, value) {
+    const cur = this.get(id);
+    const res = applyChange(cur, key, value);
+    memPatches = loadPatches();
+    memPatches[id] = { ...(memPatches[id] || {}), ...res.patch };
+    savePatches(memPatches);
+    return { order: this.get(id), applied: res.applied };
+  },
+  reset() { memPatches = {}; savePatches({}); }
+};
 
 const DOC_NUMBER = /\b(20\d{8})\b/g;
 
@@ -87,6 +127,11 @@ class MockProvider {
     };
   }
 
+  async listOrders() { await delay(120); return demoOrders.all(); }
+  getOrderSync(id) { return demoOrders.get(id); }
+  async updateOrder(id, key, value) { await delay(150); return demoOrders.update(id, key, value); }
+  resetOrders() { demoOrders.reset(); }
+
   async getFolders() { await delay(80); return FOLDER_TEMPLATE; }
   async saveFiles(payload) { await delay(700); return { ok: true, demo: true, payload }; }
   async saveNote(payload) { await delay(600); return { ok: true, demo: true, payload }; }
@@ -125,6 +170,11 @@ class ApiProvider {
   async getProject(id) { return (this.cache || []).find((p) => p.id === id) || null; }
   getCompanyContext(id) { return this.call('/api/company/' + encodeURIComponent(id)); }
   getFolders(id) { return this.call('/api/project/' + encodeURIComponent(id) + '/folders'); }
+  listOrders() { return this.call('/api/orders'); }
+  getOrderSync(id) { for (const p of this.cache || []) { const o = (p.orders || []).find((x) => x.id === id); if (o) return o; } return null; }
+  // Live: Backend schreibt das Feld in die Elwis Sales Order; die Regeln laufen als Elwis-Abläufe
+  updateOrder(id, key, value) { return this.call('/api/orders/' + encodeURIComponent(id), { method: 'PATCH', body: JSON.stringify({ key, value }) }); }
+  resetOrders() {}
   saveFiles(payload) { return this.call('/api/files', { method: 'POST', body: JSON.stringify(payload) }); }
   saveNote(payload) { return this.call('/api/notes', { method: 'POST', body: JSON.stringify(payload) }); }
   createTask(payload) { return this.call('/api/tasks', { method: 'POST', body: JSON.stringify(payload) }); }

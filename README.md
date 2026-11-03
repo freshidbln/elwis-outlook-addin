@@ -33,6 +33,20 @@ Tipp für die Demo: Echte Absender sind in den Beispieldaten nicht enthalten. Be
 bietet der Bereich Beispiel-E-Mails zum Durchklicken an. Wer sich selbst eine Mail mit dem Betreff
 `PID-3201-NBG` schickt, sieht die Projekt-Erkennung.
 
+## Auftragsstatus und Board (ersetzt Monday „Auftragsabwicklung“)
+
+- **Statuskarte im Add-in:** Zum erkannten Projekt erscheint der Auftrag mit allen Status
+  (AB, US Dollar, Korrekturabzug, Shippingmarks, Freigabemuster, Produktion, Frachtweg,
+  Lieferstatus, Lieferung) und Terminen. Klick auf ein Feld ändert den Status.
+- **„Alle Aufträge“** (Button oben im Add-in) öffnet `board.html` als großes Fenster: Gruppen
+  nach Phase, Farbstatus wie in Monday, direktes Bearbeiten, Summen, Filter nach PM und Standort.
+- **Regeln** (`src/orders.js`) fassen die 20 Monday-Automationen zusammen (R1–R7 bei Änderung,
+  T1–T5 täglich nach Terminen). Die Gruppen werden aus den Status berechnet.
+- **Live-Betrieb:** Alle Werte liegen an der Elwis Sales Order (SC-Nummer = bisherige
+  Monday-Auftragsnummer), die Regeln laufen als Server-Abläufe in Elwis. Das Board zeigt im
+  Bereich „Regeln & Felder“, welche Felder in Elwis schon existieren und welche neu anzulegen sind.
+- In der Demo werden Änderungen nur im Browser gespeichert („Demo zurücksetzen“ im Board).
+
 ## Aufbau
 
 | Datei | Inhalt |
@@ -44,6 +58,9 @@ bietet der Bereich Beispiel-E-Mails zum Durchklicken an. Wer sich selbst eine Ma
 | `src/mock-data.js` | Erfundene Beispieldaten im Aufbau der Elwis-Typen |
 | `src/status.js` | Status-Werte und Farben wie in Elwis konfiguriert |
 | `src/config.js` | Modus (demo/live), Elwis-Adresse, Seiten für Direktlinks |
+| `src/orders.js` | Auftragsstatus: Felder, Farben, Phasen, Regeln |
+| `src/status-ui.js`, `src/status-ui.css` | Status-Chips und Auswahl (Add-in und Board) |
+| `board.html`, `src/board.js`, `src/board.css` | Übersicht „Alle Aufträge“ |
 | `backend/` | Vermittlungs-Backend für die Live-Version (nur lesend, noch nicht in Betrieb) |
 
 ## Live-Version (Stufe 1, nur lesend)
