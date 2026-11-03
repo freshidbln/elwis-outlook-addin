@@ -427,7 +427,7 @@ function refreshViews() {
 }
 
 function openBoard() {
-  const url = new URL('board.html?v=1.3.0', location.href).toString();
+  const url = new URL('board.html?v=1.3.1', location.href).toString();
   if (state.inOutlook && Office.context.ui?.displayDialogAsync) {
     Office.context.ui.displayDialogAsync(url, { height: 90, width: 90, promptBeforeOpen: false }, (res) => {
       if (res.status !== Office.AsyncResultStatus.Succeeded) window.open(url, '_blank');
@@ -523,24 +523,26 @@ async function openFolder(projectId) {
   openUrl(p.folder);
 }
 
-// Vorschlag für den Unterordner anhand von Dateiname, Dateityp und Absender
+// Vorschlag für den Unterordner anhand von Dateiname, Dateityp und Absender (Kunde oder Lieferant)
 function suggestFolder(fileName, folders, mail) {
   const n = (fileName || '').toLowerCase();
+  const vendor = !!mail?.isVendor;
   const rules = [
-    [/(artwork|logo|layout|design|druckdaten|\.ai$|\.eps$|\.psd$|\.svg$|\.indd$|mockup)/, 'design'],
-    [/(rechnung|invoice|zahlung|payment|proforma)/, 'invoice'],
-    [/(packing|packliste|bl[_\s-]|bill of lading|awb|zoll|customs|shipping|lieferschein|delivery)/, 'shipping'],
-    [/(test|report|inspection|qc|fri|dpi|zertifikat|certificate|ppwr|reach|ce[_\s-])/, 'qc'],
-    [/(muster|sample|freigabe|approval|foto|photo|\.jpe?g$|\.png$|\.heic$)/, 'sample'],
-    [/(po[_\s-]|purchase order|bestellung|auftragsbest|order confirmation|\bab\b|sales order)/, 'order'],
-    [/(angebot|quote|quotation|kalkulation|calculation|price|preis|offer)/, 'quote'],
-    [/(briefing|anfrage|inquiry|request|rfq)/, 'brief']
+    [/(korrektur|proof|korri|druckfreigabe)/, 'korri'],
+    [/(druckdaten|artwork|logo|layout|vektor|vector|\.ai$|\.eps$|\.pdf_print|\.psd$|\.svg$|\.indd$)/, 'druckdaten'],
+    [/(freigabemuster|golden sample|pp sample|pre-?production)/, 'freigabemuster'],
+    [/(auftragsbest|order confirmation|\bab[_\s-]|\bab\b|sales contract|proforma)/, vendor ? 'liefAB' : 'kundeAB'],
+    [/(bestellung|purchase order|\bpo[_\s-]?\d)/, 'bestellung'],
+    [/(packing|packliste|bill of lading|\bbl[_\s-]|awb|lieferschein|delivery note|zoll|customs|commercial invoice|test ?report|zertifikat|certificate)/, 'lieferdok'],
+    [/(rechnung|invoice|zahlung|payment)/, 'rechnung'],
+    [/(muster|sample)/, 'muster'],
+    [/(angebot|quote|quotation|offer|preis|price|kalkulation)/, vendor ? 'angLief' : 'angKunde'],
+    [/(abbildung|mockup|visual|rendering|\.jpe?g$|\.png$|\.heic$|\.webp$)/, 'abbildungen'],
+    [/(vorlage|template|dieline|stanz)/, 'vorlagen']
   ];
-  let key = null;
+  let key = '';
   for (const [re, k] of rules) if (re.test(n)) { key = k; break; }
-  // Lieferanten-Mail mit Angebot → Lieferantenordner
-  if (key === 'quote' && mail?.isVendor) key = 'vendor';
-  return folders.find((f) => f.key === key)?.key || '';
+  return folders.some((f) => f.key === key) ? key : '';
 }
 
 async function getAttachments() {
@@ -566,7 +568,7 @@ async function openFileForm(projectId) {
   const sizeTxt = (b) => b > 1e6 ? (b / 1e6).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(b / 1e3)) + ' KB';
   const folderSelect = (sel) => `<select class="fsel">
       <option value="" ${sel === '' ? 'selected' : ''}>📁 ${esc(p.pid)} (oberste Ebene)</option>
-      ${folders.map((f) => `<option value="${f.key}" ${sel === f.key ? 'selected' : ''}>&nbsp;&nbsp;└ ${esc(f.name)}</option>`).join('')}
+      ${folders.map((f) => `<option value="${f.key}" ${sel === f.key ? 'selected' : ''}>${'&nbsp;&nbsp;&nbsp;&nbsp;'.repeat((f.depth || 0) + 1)}└ ${esc(f.name)}</option>`).join('')}
     </select>`;
   const projSel = (state.ctx?.projects || []).length > 1
     ? `<label>Projekt<select id="ffProject">${state.ctx.projects.map((x) => `<option value="${x.id}" ${x.id === pid ? 'selected' : ''}>${esc(x.pid)} – ${esc(x.name)}</option>`).join('')}</select></label>` : '';
@@ -582,7 +584,7 @@ async function openFileForm(projectId) {
         </div>`).join('') : '<div class="subtitle">Diese E-Mail hat keine Anhänge.</div>'}
       <div class="file-row">
         <label class="check"><input type="checkbox" class="fchk" data-id="mail"> <span class="fname">Ganze E-Mail (.eml)</span></label>
-        ${folderSelect(folders.find((f) => f.key === 'correspondence')?.key || '')}
+        ${folderSelect(mail.isVendor ? 'lieferant' : 'kunde')}
       </div>
       <div class="subtitle">Der Unterordner wird anhand von Dateiname und -typ vorgeschlagen und lässt sich je Datei ändern.</div>
       <button class="btn primary block" id="ffSave">Ablegen</button>
@@ -599,7 +601,7 @@ async function openFileForm(projectId) {
     e.target.disabled = true; e.target.textContent = 'Lege ab …';
     await provider.saveFiles({ projectId: pid, files: chosen });
     closeSheet();
-    const names = [...new Set(chosen.map((c) => folders.find((f) => f.key === c.folder)?.name || p.pid))];
+    const names = [...new Set(chosen.map((c) => folders.find((f) => f.key === c.folder)?.path || p.pid))];
     toast(provider.isDemo
       ? `Demo: ${chosen.length} Datei(en) würden in ${names.join(', ')} abgelegt. Es wurde nichts hochgeladen.`
       : `${chosen.length} Datei(en) im Projektordner abgelegt.`, true);

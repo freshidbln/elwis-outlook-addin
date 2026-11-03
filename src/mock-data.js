@@ -126,18 +126,25 @@ export const demoEmails = [
     subject: 'Ihre Anfrage', received: d(-2) }
 ];
 
-// Vorschlag für eine Standard-Ordnerstruktur je Projekt (wird mit fresh id abgestimmt)
+// Standard-Ordnerstruktur je Projekt – Beispiel von fresh id (Projektordner 618778, „fid Group“)
+// depth = Ebene im Baum, path = Pfad relativ zum Projektordner
 export const FOLDER_TEMPLATE = [
-  { key: 'brief', name: '01 Anfrage & Briefing' },
-  { key: 'design', name: '02 Design & Artwork' },
-  { key: 'quote', name: '03 Kalkulation & Angebote' },
-  { key: 'vendor', name: '04 Lieferanten' },
-  { key: 'sample', name: '05 Muster & Freigaben' },
-  { key: 'order', name: '06 Auftrag & Bestellung' },
-  { key: 'qc', name: '07 Produktion & QC' },
-  { key: 'shipping', name: '08 Versand & Zoll' },
-  { key: 'invoice', name: '09 Rechnungen' },
-  { key: 'correspondence', name: '10 Korrespondenz' }
+  { key: 'abbildungen', name: '#1 Abbildungen Angebote', path: '#1 Abbildungen Angebote', depth: 0 },
+  { key: 'angLief', name: '#2 Angebote von Lieferanten', path: '#2 Angebote von Lieferanten', depth: 0 },
+  { key: 'angKunde', name: '#3 Angebote an Kunden', path: '#3 Angebote an Kunden', depth: 0 },
+  { key: 'auftrag', name: '#4 Auftrag', path: '#4 Auftrag', depth: 0 },
+  { key: 'kunde', name: 'Kunde', path: '#4 Auftrag/Kunde', depth: 1 },
+  { key: 'kundeAB', name: 'Auftragsbestätigung', path: '#4 Auftrag/Kunde/Auftragsbestätigung', depth: 2 },
+  { key: 'druckdaten', name: 'Druckdaten', path: '#4 Auftrag/Kunde/Druckdaten', depth: 2 },
+  { key: 'freigabemuster', name: 'Freigabemuster', path: '#4 Auftrag/Kunde/Freigabemuster', depth: 2 },
+  { key: 'lieferant', name: 'Lieferant', path: '#4 Auftrag/Lieferant', depth: 1 },
+  { key: 'liefAB', name: 'Auftragsbestätigung', path: '#4 Auftrag/Lieferant/Auftragsbestätigung', depth: 2 },
+  { key: 'bestellung', name: 'Bestellung', path: '#4 Auftrag/Lieferant/Bestellung', depth: 2 },
+  { key: 'korri', name: 'Korrekturabzug', path: '#4 Auftrag/Lieferant/Korrekturabzug', depth: 2 },
+  { key: 'lieferdok', name: 'Lieferdokumente', path: '#4 Auftrag/Lieferant/Lieferdokumente', depth: 2 },
+  { key: 'rechnung', name: '#5 Rechnung', path: '#5 Rechnung', depth: 0 },
+  { key: 'muster', name: 'Muster', path: 'Muster', depth: 0 },
+  { key: 'vorlagen', name: 'Vorlagen', path: 'Vorlagen', depth: 0 }
 ];
 
 // ---------- Projektmanagement-Status der Aufträge (Demo) ----------
