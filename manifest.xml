@@ -20,6 +20,7 @@
   <SupportUrl DefaultValue="https://freshidbln.github.io/elwis-outlook-addin/"/>
   <AppDomains>
     <AppDomain>https://freshid.elwis.cloud</AppDomain>
+    <AppDomain>https://freshidproducts.sharepoint.com</AppDomain>
   </AppDomains>
   <Hosts>
     <Host Name="Mailbox"/>

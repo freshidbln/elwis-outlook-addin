@@ -162,9 +162,17 @@ function renderFocus(focus) {
     ${lastNote ? `<div class="mini"><div class="mini-title">Letzte Notiz</div><div class="note"><div class="meta">${dateDe(lastNote.date)} · ${esc(lastNote.author)}</div>${esc(lastNote.text)}</div></div>` : ''}
     <div class="btn-row">
       <button class="btn primary" data-open-project="${p.id}">Projekt ansehen</button>
+      ${folderBtn(p)}
       <button class="btn" data-elwis="${p.kind}|${p.office}|${p.id}">In Elwis öffnen ↗</button>
     </div>
   </div>`;
+}
+
+const FOLDER_ICON = '<svg viewBox="0 0 20 20" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M3.5 4A1.5 1.5 0 0 0 2 5.5v9A1.5 1.5 0 0 0 3.5 16h13a1.5 1.5 0 0 0 1.5-1.5v-7A1.5 1.5 0 0 0 16.5 6H10L8.4 4.4A1.5 1.5 0 0 0 7.34 4H3.5Z"/></svg>';
+function folderBtn(p, label = 'Projektordner') {
+  return p.folder
+    ? `<button class="btn" data-folder="${p.id}" title="SharePoint-Projektordner öffnen">${FOLDER_ICON}${label} ↗</button>`
+    : `<button class="btn" disabled title="In Elwis ist kein Projektordner hinterlegt">${FOLDER_ICON}kein Ordner</button>`;
 }
 
 function nextDate(p) {
@@ -297,6 +305,7 @@ function renderUnknown(mail) {
 
 function renderActions(ctx) {
   return `<div class="section-title">Aus dieser E-Mail</div>
+    <button class="btn block primary" data-action="file" style="margin-bottom:6px">${FOLDER_ICON}Anhänge im Projektordner ablegen</button>
     <div class="actions">
       <button class="btn block" data-action="note">Als Notiz speichern</button>
       <button class="btn block" data-action="task">Aufgabe anlegen</button>
@@ -310,6 +319,8 @@ function wireView() {
   v.querySelectorAll('[data-open-project]').forEach((b) => b.addEventListener('click', () => openProject(b.dataset.openProject)));
   v.querySelectorAll('[data-open-doc]').forEach((b) => b.addEventListener('click', () => { const [pid, did] = b.dataset.openDoc.split('|'); openDoc(pid, did); }));
   v.querySelectorAll('[data-elwis]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); const [k, o, id] = b.dataset.elwis.split('|'); openInElwis(k, o, id); }));
+  v.querySelectorAll('[data-folder]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); openFolder(b.dataset.folder); }));
+  v.querySelectorAll('[data-action="file"]').forEach((b) => b.addEventListener('click', () => openFileForm()));
   v.querySelectorAll('[data-action="note"]').forEach((b) => b.addEventListener('click', openNoteForm));
   v.querySelectorAll('[data-action="task"]').forEach((b) => b.addEventListener('click', openTaskForm));
   v.querySelectorAll('[data-action="newcontact"]').forEach((b) => b.addEventListener('click', () => toast('Stufe 2: Kontakt aus Absender anlegen – in der Demo nicht aktiv.')));
@@ -367,7 +378,11 @@ async function openProject(id) {
         <span class="k">Priorität</span><span>${badge('priority', p.priority)}</span>
         <span class="k">Closing Chance</span><span>${badge('closingChance', p.closingChance)}</span>
       </div>
-      <div class="btn-row"><button class="btn primary" data-elwis="inquiry|${p.office}|${p.id}">In Elwis öffnen ↗</button></div>
+      <div class="btn-row">
+        <button class="btn primary" data-elwis="inquiry|${p.office}|${p.id}">In Elwis öffnen ↗</button>
+        ${folderBtn(p)}
+        <button class="btn" data-file="${p.id}">Anhänge ablegen</button>
+      </div>
     </div>
     ${sec('Muster', p.samples, 'sample', docRow('sample'))}
     ${sec('Angebote', p.quotes, 'quote', docRow('quote'))}
@@ -411,6 +426,106 @@ function wireSheet() {
   s.querySelectorAll('[data-open-doc]').forEach((b) => b.addEventListener('click', () => { const [pid, did] = b.dataset.openDoc.split('|'); openDoc(pid, did); }));
   s.querySelectorAll('[data-open-project]').forEach((b) => b.addEventListener('click', () => openProject(b.dataset.openProject)));
   s.querySelectorAll('[data-elwis]').forEach((b) => b.addEventListener('click', () => { const [k, o, id] = b.dataset.elwis.split('|'); openInElwis(k, o, id); }));
+  s.querySelectorAll('[data-folder]').forEach((b) => b.addEventListener('click', () => openFolder(b.dataset.folder)));
+  s.querySelectorAll('[data-file]').forEach((b) => b.addEventListener('click', () => openFileForm(b.dataset.file)));
+}
+
+// ---------- SharePoint-Projektordner ----------
+async function openFolder(projectId) {
+  const p = await provider.getProject(projectId);
+  if (!p?.folder) return toast('Für dieses Projekt ist in Elwis kein Projektordner hinterlegt.');
+  if (provider.isDemo) toast('Demo: Es öffnet sich die SharePoint-Projektbibliothek. In der Live-Version direkt der Ordner des Projekts.');
+  openUrl(p.folder);
+}
+
+// Vorschlag für den Unterordner anhand von Dateiname, Dateityp und Absender
+function suggestFolder(fileName, folders, mail) {
+  const n = (fileName || '').toLowerCase();
+  const rules = [
+    [/(artwork|logo|layout|design|druckdaten|\.ai$|\.eps$|\.psd$|\.svg$|\.indd$|mockup)/, 'design'],
+    [/(rechnung|invoice|zahlung|payment|proforma)/, 'invoice'],
+    [/(packing|packliste|bl[_\s-]|bill of lading|awb|zoll|customs|shipping|lieferschein|delivery)/, 'shipping'],
+    [/(test|report|inspection|qc|fri|dpi|zertifikat|certificate|ppwr|reach|ce[_\s-])/, 'qc'],
+    [/(muster|sample|freigabe|approval|foto|photo|\.jpe?g$|\.png$|\.heic$)/, 'sample'],
+    [/(po[_\s-]|purchase order|bestellung|auftragsbest|order confirmation|\bab\b|sales order)/, 'order'],
+    [/(angebot|quote|quotation|kalkulation|calculation|price|preis|offer)/, 'quote'],
+    [/(briefing|anfrage|inquiry|request|rfq)/, 'brief']
+  ];
+  let key = null;
+  for (const [re, k] of rules) if (re.test(n)) { key = k; break; }
+  // Lieferanten-Mail mit Angebot → Lieferantenordner
+  if (key === 'quote' && mail?.isVendor) key = 'vendor';
+  return folders.find((f) => f.key === key)?.key || '';
+}
+
+async function getAttachments() {
+  const item = state.inOutlook ? Office.context.mailbox.item : null;
+  if (item && Array.isArray(item.attachments)) {
+    return item.attachments.filter((a) => !a.isInline).map((a) => ({ id: a.id, name: a.name, size: a.size }));
+  }
+  return [
+    { id: 'a1', name: 'Artwork_Sommer-Display_v3.ai', size: 8400000 },
+    { id: 'a2', name: 'Druckfreigabe_Etikett.pdf', size: 420000 },
+    { id: 'a3', name: 'Packing_List_SO-2026090045.xlsx', size: 36000 }
+  ];
+}
+
+async function openFileForm(projectId) {
+  const projects = state.ctx?.projects || [];
+  const pid = projectId || state.ctx?.focus?.project?.id || projects[0]?.id;
+  if (!pid) return toast('Kein Projekt zugeordnet – bitte zuerst ein Projekt wählen.');
+  const p = await provider.getProject(pid);
+  const folders = await provider.getFolders(pid);
+  const atts = await getAttachments();
+  const mail = { ...(state.mail || {}), isVendor: state.ctx?.company?.kind === 'vendor' };
+  const sizeTxt = (b) => b > 1e6 ? (b / 1e6).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(b / 1e3)) + ' KB';
+  const folderSelect = (sel) => `<select class="fsel">
+      <option value="" ${sel === '' ? 'selected' : ''}>📁 ${esc(p.pid)} (oberste Ebene)</option>
+      ${folders.map((f) => `<option value="${f.key}" ${sel === f.key ? 'selected' : ''}>&nbsp;&nbsp;└ ${esc(f.name)}</option>`).join('')}
+    </select>`;
+  const projSel = (state.ctx?.projects || []).length > 1
+    ? `<label>Projekt<select id="ffProject">${state.ctx.projects.map((x) => `<option value="${x.id}" ${x.id === pid ? 'selected' : ''}>${esc(x.pid)} – ${esc(x.name)}</option>`).join('')}</select></label>` : '';
+
+  openSheet('Im Projektordner ablegen', `
+    <div class="form">
+      <div class="hint">Demo: Es wird nichts hochgeladen. In der Live-Version speichert das Add-in die Dateien direkt im SharePoint-Ordner des Projekts.</div>
+      ${projSel}
+      <div class="mini-title" style="margin:2px 0 -4px">Dateien und Zielordner</div>
+      ${atts.length ? atts.map((a) => `<div class="file-row">
+          <label class="check"><input type="checkbox" class="fchk" data-id="${esc(a.id)}" checked> <span class="fname">${esc(a.name)}</span> <span class="subtitle">${sizeTxt(a.size || 0)}</span></label>
+          ${folderSelect(suggestFolder(a.name, folders, mail))}
+        </div>`).join('') : '<div class="subtitle">Diese E-Mail hat keine Anhänge.</div>'}
+      <div class="file-row">
+        <label class="check"><input type="checkbox" class="fchk" data-id="mail"> <span class="fname">Ganze E-Mail (.eml)</span></label>
+        ${folderSelect(folders.find((f) => f.key === 'correspondence')?.key || '')}
+      </div>
+      <div class="subtitle">Der Unterordner wird anhand von Dateiname und -typ vorgeschlagen und lässt sich je Datei ändern.</div>
+      <button class="btn primary block" id="ffSave">Ablegen</button>
+      <button class="btn block" id="ffOpen">${FOLDER_ICON}Ordner in SharePoint öffnen ↗</button>
+    </div>`);
+  $('ffProject')?.addEventListener('change', (e) => openFileForm(e.target.value));
+  $('ffOpen').addEventListener('click', () => openFolder(pid));
+  $('ffSave').addEventListener('click', async (e) => {
+    const rows = [...document.querySelectorAll('#sheetBody .file-row')];
+    const chosen = rows.filter((r) => r.querySelector('.fchk').checked).map((r) => ({
+      id: r.querySelector('.fchk').dataset.id, folder: r.querySelector('.fsel').value
+    }));
+    if (!chosen.length) return toast('Bitte mindestens eine Datei auswählen.');
+    e.target.disabled = true; e.target.textContent = 'Lege ab …';
+    await provider.saveFiles({ projectId: pid, files: chosen });
+    closeSheet();
+    const names = [...new Set(chosen.map((c) => folders.find((f) => f.key === c.folder)?.name || p.pid))];
+    toast(provider.isDemo
+      ? `Demo: ${chosen.length} Datei(en) würden in ${names.join(', ')} abgelegt. Es wurde nichts hochgeladen.`
+      : `${chosen.length} Datei(en) im Projektordner abgelegt.`, true);
+  });
+}
+
+function openUrl(url) {
+  try {
+    if (state.inOutlook && Office.context.ui.openBrowserWindow) Office.context.ui.openBrowserWindow(url);
+    else window.open(url, '_blank', 'noopener');
+  } catch { window.open(url, '_blank', 'noopener'); }
 }
 
 // ---------- Stufe 2: Notiz / Aufgabe (Demo) ----------

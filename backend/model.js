@@ -10,7 +10,7 @@ export const MAP = {
     contact: { type: 'Contact NBG', email: 'Email [NBG]', phone: 'Phone No.', ctype: 'Contact type' },
     customer: { type: 'Customer NBG', number: 'Customer Number' },
     vendor: { type: 'Vendor NBG', number: 'Vendor Number' },
-    inquiry: { type: 'Inquiry NBG', pid: 'Project Inquiry ID', status: 'Inquiry Status', amount: 'Inquiry Amount', deadline: 'Inquiry Deadline', received: 'Inquiry Received' },
+    inquiry: { type: 'Inquiry NBG', folder: 'Project Folder', pid: 'Project Inquiry ID', status: 'Inquiry Status', amount: 'Inquiry Amount', deadline: 'Inquiry Deadline', received: 'Inquiry Received' },
     sample: { type: 'Sample NBG', status: 'Sample Status PM', date: 'Sample Order Date', deadline: 'Sample Deadline', amount: 'Quotation Amount' },
     quote: { type: 'Quote NBG', number: 'Quote Number', status: 'Quote Status', date: 'Quote Date', validTo: 'Quote Valid to Date', amount: 'Total' },
     order: { type: 'Sales Order NBG', number: 'Order Number', status: 'Order Status', date: 'Sales Order Date', amount: 'Total', openAmount: 'Open Amount', etd: 'ETD', eta: 'ETA' },
@@ -26,7 +26,7 @@ export const MAP = {
     contact: { type: 'Contact HKG', email: 'Email', phone: 'Phone No.', ctype: 'Contact type' },
     customer: { type: 'Customer HKG', number: 'Customer Number HKG' },
     vendor: { type: 'Vendor HKG', number: 'Original Id' },
-    inquiry: { type: 'Inquiry HKG', pid: 'HKG PID', status: 'Inquiry Status', amount: 'Inquiry Amount', deadline: 'Inquiry Deadline', received: 'Inquiry Received' },
+    inquiry: { type: 'Inquiry HKG', folder: 'Project Folder', pid: 'HKG PID', status: 'Inquiry Status', amount: 'Inquiry Amount', deadline: 'Inquiry Deadline', received: 'Inquiry Received' },
     sample: { type: 'Sample HKG', status: 'Sample Status PM', date: 'Sample Order Date', deadline: 'Sample Deadline', amount: 'Quotation Amount' },
     quote: { type: 'Quote HKG', status: 'Quote Status', date: 'Quote Date', validTo: 'Quote Valid to Date', amount: 'Total' },
     order: { type: 'Sales Order HKG', number: 'Order Number', status: 'Order Status', date: 'Sales Order Date', amount: 'Total', openAmount: 'Open Amount', etd: 'ETD', eta: 'ETA' },
@@ -106,6 +106,7 @@ export class Model {
       if (['amount', 'net', 'openAmount'].includes(k)) doc[k] = this.num(a, field);
       else if (['date', 'due', 'validTo', 'deadline', 'received', 'etd', 'eta'].includes(k)) doc[k] = this.date(a, field);
       else if (['status', 'payment'].includes(k)) doc[k] = this.num(a, field);
+      else if (k === 'folder') { const v = this.val(a, field); const m = v && (typeof v === 'string' ? v : JSON.stringify(v)).match(/https?:\/\/[^"\s]+/); doc.folder = m ? m[0] : null; }
       else doc[k] = this.val(a, field);
     }
     doc.currency = 'EUR'; // TODO: Currency-Auswahlliste auswerten

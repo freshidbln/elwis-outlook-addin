@@ -6,7 +6,7 @@
 // MockProvider liefert Beispieldaten, ApiProvider spricht mit dem Backend.
 
 import { CONFIG } from './config.js';
-import { companies, contacts, projects } from './mock-data.js';
+import { companies, contacts, projects, FOLDER_TEMPLATE } from './mock-data.js';
 
 const DOC_NUMBER = /\b(20\d{8})\b/g;
 
@@ -87,6 +87,8 @@ class MockProvider {
     };
   }
 
+  async getFolders() { await delay(80); return FOLDER_TEMPLATE; }
+  async saveFiles(payload) { await delay(700); return { ok: true, demo: true, payload }; }
   async saveNote(payload) { await delay(600); return { ok: true, demo: true, payload }; }
   async createTask(payload) { await delay(600); return { ok: true, demo: true, payload }; }
 }
@@ -122,6 +124,8 @@ class ApiProvider {
   async search(q) { return []; } // Suche folgt im Backend
   async getProject(id) { return (this.cache || []).find((p) => p.id === id) || null; }
   getCompanyContext(id) { return this.call('/api/company/' + encodeURIComponent(id)); }
+  getFolders(id) { return this.call('/api/project/' + encodeURIComponent(id) + '/folders'); }
+  saveFiles(payload) { return this.call('/api/files', { method: 'POST', body: JSON.stringify(payload) }); }
   saveNote(payload) { return this.call('/api/notes', { method: 'POST', body: JSON.stringify(payload) }); }
   createTask(payload) { return this.call('/api/tasks', { method: 'POST', body: JSON.stringify(payload) }); }
 }

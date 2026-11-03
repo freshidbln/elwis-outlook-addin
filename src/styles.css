@@ -167,3 +167,11 @@ main { flex: 1; padding: 4px 12px 12px; }
 .toast.ok { background: #1f5f3d; }
 
 .foot { padding: 8px 12px; font-size: 11px; color: var(--muted); text-align: center; border-top: 1px solid var(--line); background: #fff; }
+
+/* Ablegen im Projektordner */
+.file-row { background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 8px; display: grid; gap: 6px; }
+.file-row .check { font-weight: 400; color: var(--text); align-items: flex-start; }
+.file-row .fname { font-weight: 600; overflow-wrap: anywhere; flex: 1; }
+.file-row .subtitle { white-space: nowrap; }
+.file-row select { font-size: 12px; padding: 5px 6px; }
+.btn svg { flex: none; }
