@@ -434,7 +434,7 @@ function renderDealCard(d) {
       <div class="title" style="font-size:13px">${esc(d.name)}</div>
       <span class="oc-phase" style="background:${ph.color}" title="${esc(ph.label)}">${esc(ph.short)}</span>
     </div>
-    <div class="subtitle">Verkäufer ${esc(d.seller || '–')}${d.an ? ' · Angebot ' + esc(d.an) : ''}${d.amount ? ' · ' + money(d.amount, d.currency) : ''}</div>
+    <div class="subtitle">Verkäufer ${esc(d.seller || '–')}${d.pid ? ' · ' + esc(d.pid) : ''}${d.amount ? ' · ' + money(d.amount, d.currency) : ''}</div>
     ${late ? `<div class="dc-alert"><span><b>Entscheidung war bis ${dateDe(d.entscheidung)}</b> – seit ${late} ${late === 1 ? 'Tag' : 'Tagen'} überfällig. Beim Kunden nachfassen?</span>
       <button class="btn small" data-dc-snooze="${d.id}">Nachgefasst: +7 Tage</button></div>` : ''}
     ${d.reactivated ? '<div class="dc-note">Wiedervorlage: Das Projekt war „On Hold“ und ist wieder offen.</div>' : ''}
@@ -513,7 +513,7 @@ function refreshViews() {
 function openBoard() {
   const fp = state.ctx?.focus?.project;
   const view = fp ? (provider.ordersForProject(fp.id).length ? '&view=orders' : '&view=sales') : '';
-  const url = new URL('board.html?v=1.4.1' + view, location.href).toString();
+  const url = new URL('board.html?v=1.4.2' + view, location.href).toString();
   if (state.inOutlook && Office.context.ui?.displayDialogAsync) {
     Office.context.ui.displayDialogAsync(url, { height: 90, width: 90, promptBeforeOpen: false }, (res) => {
       if (res.status !== Office.AsyncResultStatus.Succeeded) window.open(url, '_blank');

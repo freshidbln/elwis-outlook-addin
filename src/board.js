@@ -29,7 +29,7 @@ const VIEWS = {
     collapsed: ['verloren', 'uebergeben'], person: 'seller', personLabel: 'Alle Verkäufer',
     infoCols: [
       { key: 'seller', label: 'Verkäufer', w: 120 }, { key: 'contact', label: 'Kontakt', w: 130 },
-      { key: 'company', label: 'Unternehmen', w: 180 }, { key: 'an', label: 'Angebots-Nr.', w: 100 },
+      { key: 'company', label: 'Unternehmen', w: 180 }, { key: 'pid', label: 'PID', w: 112 },
       { key: 'amount', label: 'Wert', w: 100, align: 'right' }, { key: 'received', label: 'Anfrage vom', w: 96, date: true }
     ],
     list: () => provider.listDeals(),
@@ -44,7 +44,7 @@ const VIEWS = {
     collapsed: ['abruf'], person: 'pm', personLabel: 'Alle PMs',
     infoCols: [
       { key: 'pm', label: 'PM', w: 120 }, { key: 'seller', label: 'Verkäufer', w: 120 }, { key: 'contact', label: 'Kontakt', w: 130 },
-      { key: 'company', label: 'Unternehmen', w: 180 }, { key: 'sc', label: 'SC-Nr.', w: 80 }, { key: 'amount', label: 'Auftragswert', w: 105, align: 'right' }
+      { key: 'company', label: 'Unternehmen', w: 180 }, { key: 'pid', label: 'PID', w: 112 }, { key: 'sc', label: 'SC-Nr.', w: 80 }, { key: 'amount', label: 'Auftragswert', w: 105, align: 'right' }
     ],
     list: () => provider.listOrders(),
     update: async (id, k, v) => { const r = await provider.updateOrder(id, k, v); return { item: r.order, applied: r.applied }; },
@@ -84,7 +84,7 @@ async function switchView(k) {
   collapsed = new Set(V().collapsed);
   document.querySelectorAll('[data-view]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.view === k)));
   document.title = `${V().tab} – Elwis`;
-  $('q').placeholder = k === 'sales' ? 'Deal, Kunde, PID, Angebots-Nr. suchen' : 'Auftrag, Kunde, SC-Nr. suchen';
+  $('q').placeholder = k === 'sales' ? 'Deal, Kunde oder PID suchen' : 'Auftrag, Kunde, PID oder SC-Nr. suchen';
   $('rules').hidden = true;
   await load();
   const people = [...new Set(items.flatMap((o) => splitPeople(o[V().person])))].sort();
@@ -160,7 +160,7 @@ function renderRow(o) {
   return `<tr data-id="${o.id}">
     <td class="sticky name">
       <div class="n-main">${esc(o.name)}</div>
-      <div class="n-sub">${o.pid ? esc(o.pid) + ' · ' : ''}${esc(o.office || '')} ${v.badge(o)}</div>
+      <div class="n-sub">${esc(o.office || '')} ${v.badge(o)}</div>
     </td>
     ${v.infoCols.map((c) => `<td class="ro${c.align === 'right' ? ' right' : ''}">${c.key === 'amount' ? money(o.amount, o.currency) : c.date ? fmtDate(o[c.key]) : (c.key === 'sc' && !o.sc && o.fromDeal) ? '<span class="neu-sc" title="SC-Nummer vergibt Elwis beim Anlegen der Sales Order">neu</span>' : esc(o[c.key] || '')}</td>`).join('')}
     ${v.fields.map((f) => `<td class="st${f.type === 'date' ? ' dt' : ''}${f.type === 'date' && v.overdue(o, f.key) ? ' late' : ''}" data-cell="${o.id}|${f.key}" title="${esc(f.label)}">${statusChip(f.key, o[f.key], { full: f.type !== 'date' })}</td>`).join('')}
@@ -223,7 +223,8 @@ function toggleRules() {
         `<tr><td colspan="2" class="sub-h">Werte des Vertriebsstatus</td></tr>` +
         SALES_FIELDS[0].options.map(([l, , m]) => `<tr><td>${esc(l)}</td><td>${/^neu/.test(m) ? `<span class="neu">${esc(m)}</span>` : esc(m)}</td></tr>`).join('') +
         `<tr><td>${esc(SALES_COMMENT.label)}</td><td>${esc(SALES_COMMENT.elwis)}</td></tr>` +
-        `<tr><td>Verkäufer (auch mehrere), Kontakt, Unternehmen, PID, Angebots-Nr., Wert, Anfrage vom</td><td>vorhanden (werden nur angezeigt)</td></tr>`
+        `<tr><td>PID – durchgehende Nummer von der Anfrage bis zur Rechnung</td><td>vorhanden (Project ID); muss bei jeder Anfrage automatisch vergeben werden</td></tr>` +
+        `<tr><td>Verkäufer (auch mehrere), Kontakt, Unternehmen, Wert, Anfrage vom</td><td>vorhanden (werden nur angezeigt)</td></tr>`
       : STATUS_FIELDS.map((f) => `<tr><td>${esc(f.label)}</td><td>${f.elwis ? `vorhanden: ${esc(f.elwis)}` : '<span class="neu">neu anlegen</span>'}</td></tr>`).join('') +
         `<tr><td>PM, Verkäufer, Kontakt, Unternehmen, SC-Nr., Auftragswert</td><td>vorhanden (werden nur angezeigt)</td></tr>`;
     $('rulesBody').innerHTML = `

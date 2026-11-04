@@ -15,6 +15,7 @@ export const SALES_FIELDS = [
       ['Offen', C.slate, 'Inquiry Status = Open'],
       ['Angefragt (Lieferant)', C.orange, 'neu: Inquiry Status „Angefragt“'],
       ['Angebot schreiben', C.yellow, 'Quote Status = Draft'],
+      ['Kontrolle (Preise)', C.teal, 'neu: Quote Status „In Kontrolle“ – Angebot liegt beim Vorgesetzten, der die Preise macht'],
       ['Raus an Kunden', C.green, 'Quote Status = Send to customer'],
       ['In Verhandlung', C.purple, 'neu: Quote Status „In Verhandlung“'],
       ['On Hold', C.dark, 'neu: Inquiry Status „On Hold“'],
@@ -34,7 +35,7 @@ export const SALES_FIELD = Object.fromEntries(SALES_FIELDS.map((f) => [f.key, f]
 // Freitext wie die Monday-Spalte „Kommentar / Übergabe“ (51 von 879 Deals nutzen sie)
 export const SALES_COMMENT = { key: 'comment', label: 'Kommentar / Übergabe', elwis: 'Notiz am Projekt (vorhanden); geht bei der Übergabe als Übergabe-Notiz an den Auftrag' };
 
-export const ACTIVE = ['Offen', 'Angefragt (Lieferant)', 'Angebot schreiben', 'Raus an Kunden', 'In Verhandlung'];
+export const ACTIVE = ['Offen', 'Angefragt (Lieferant)', 'Angebot schreiben', 'Kontrolle (Preise)', 'Raus an Kunden', 'In Verhandlung'];
 
 export const SALES_PHASES = [
   { key: 'anfragen', label: 'Anfragen', short: 'Anfrage', color: '#579bfc' },
@@ -70,6 +71,7 @@ export const SALES_RULES = [
   { id: 'V3', when: 'Vertriebsstatus → „On Hold“', then: '„On Hold seit“ = heute; Wiedervorlage über „Entscheidung bis“ (leer → heute + 30 Tage); Info an Verkäufer' },
   { id: 'V4', when: 'Vertriebsstatus → „Verloren“', then: 'Verlustgrund wird abgefragt (Pflichtfeld)' },
   { id: 'V5', when: 'Vertriebsstatus → „Übergeben“', then: 'Auftrag (Sales Order) wird angelegt und erscheint in der Auftragsabwicklung' },
+  { id: 'V6', when: 'Vertriebsstatus → „Kontrolle (Preise)“', then: 'Aufgabe „Preise machen“ an den Vorgesetzten (Vorschlag); danach weiter mit „Raus an Kunden“' },
   { id: 'T1', when: 'Täglich: „Entscheidung bis“ überschritten, Status aktiv', then: 'Markierung „überfällig“ + Erinnerung an Verkäufer (Status bleibt erhalten)' },
   { id: 'T2', when: 'Täglich: Wiedervorlage erreicht, Status On Hold', then: 'Vertriebsstatus = Offen (zurück in „Anfragen“) + Info an Verkäufer' }
 ];
@@ -93,6 +95,7 @@ export function applySalesChange(deal, key, value, todayIso) {
     if (value === 'Raus an Kunden' && !d.entscheidung) set('entscheidung', addDays(todayIso, 14), 'V2');
     if (value === 'On Hold') { set('onHoldSince', todayIso, 'V3'); if (!d.entscheidung || d.entscheidung < todayIso) set('entscheidung', addDays(todayIso, 30), 'V3'); }
     if (value === 'Verloren' && !d.lostReason) applied.push('V4: Bitte Verlustgrund wählen');
+    if (value === 'Kontrolle (Preise)') applied.push('V6: Aufgabe „Preise machen“ an den Vorgesetzten');
     if (value === 'Übergeben' && deal.vstatus !== 'Übergeben') { createOrder = true; applied.push('V5: Auftrag angelegt → erscheint in der Auftragsabwicklung'); }
   }
   const after = computeSalesPhase(d);

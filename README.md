@@ -37,7 +37,7 @@ bietet der Bereich Beispiel-E-Mails zum Durchklicken an. Wer sich selbst eine Ma
 
 Ein Projekt hat im Add-in immer **genau eine Statuskarte**:
 
-- **Vor dem Auftrag: Vertriebsstatus** (Offen, Angefragt (Lieferant), Angebot schreiben, Raus an Kunden,
+- **Vor dem Auftrag: Vertriebsstatus** (Offen, Angefragt (Lieferant), Angebot schreiben, Kontrolle (Preise), Raus an Kunden,
   In Verhandlung, On Hold, Gewonnen, Verloren, Übergeben) mit Closing Chance, Priorität und
   „Entscheidung bis“. Ist der Termin überschritten, erscheint ein Hinweis mit „Nachgefasst: +7 Tage“ –
   der eigentliche Status bleibt erhalten (in Monday hat „Überfällig“ ihn überschrieben).
@@ -47,8 +47,9 @@ Ein Projekt hat im Add-in immer **genau eine Statuskarte**:
 - **„Übersicht“** (Button oben im Add-in) öffnet `board.html` mit zwei Ansichten im gleichen Look:
   *Anfrage & Vertrieb* → *Auftragsabwicklung*. Gruppen werden aus den Status berechnet,
   Status lassen sich direkt ändern, Summen und Filter (Verkäufer/PM, Standort).
-- **Regeln:** `src/sales.js` (V1–V5, T1–T2, ersetzt 22 Automationen) und `src/orders.js`
+- **Regeln:** `src/sales.js` (V1–V6, T1–T2, ersetzt 22 Automationen) und `src/orders.js`
   (R1–R7, T1–T5, ersetzt 20 Automationen). Live laufen sie als Server-Abläufe in Elwis.
+- **PID als durchgehende Nummer:** Beide Boards und das Add-in führen über die PID (Project ID), von der Anfrage bis zur Rechnung; AN-Nummern entfallen.
 - **Felder:** „Regeln & Felder“ im Board zeigt, was in Elwis schon existiert und was neu anzulegen ist.
 - In der Demo werden Änderungen nur im Browser gespeichert („Demo zurücksetzen“ im Board).
 
