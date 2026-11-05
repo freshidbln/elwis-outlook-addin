@@ -71,7 +71,8 @@ export const SALES_RULES = [
   { id: 'V3', when: 'Vertriebsstatus → „On Hold“', then: '„On Hold seit“ = heute; Wiedervorlage über „Entscheidung bis“ (leer → heute + 30 Tage); Info an Verkäufer' },
   { id: 'V4', when: 'Vertriebsstatus → „Verloren“', then: 'Verlustgrund wird abgefragt (Pflichtfeld)' },
   { id: 'V5', when: 'Vertriebsstatus → „Übergeben“', then: 'Auftrag (Sales Order) wird angelegt und erscheint in der Auftragsabwicklung' },
-  { id: 'V6', when: 'Vertriebsstatus → „Kontrolle (Preise)“', then: 'Aufgabe „Preise machen“ an den Vorgesetzten (Vorschlag); danach weiter mit „Raus an Kunden“' },
+  { id: 'V6', when: 'Vertriebsstatus → „Kontrolle (Preise)“', then: 'Aufgabe „Preise machen“ an den Vorgesetzten (Vorschlag); danach weiter mit „Raus an Kunden“. Fehlt die Kalkulation, zeigt die Vertriebskarte einen Hinweis' },
+  { id: 'V7', when: 'Kalkulation im Kalkulator „an Vertrieb übergeben“', then: 'Staffeln mit Selbstkosten, VK und DB stehen an der Vertriebskarte und im Board (Markierung „kalkuliert“); live als Angebotspositionen am Elwis-Angebot' },
   { id: 'T1', when: 'Täglich: „Entscheidung bis“ überschritten, Status aktiv', then: 'Markierung „überfällig“ + Erinnerung an Verkäufer (Status bleibt erhalten)' },
   { id: 'T2', when: 'Täglich: Wiedervorlage erreicht, Status On Hold', then: 'Vertriebsstatus = Offen (zurück in „Anfragen“) + Info an Verkäufer' }
 ];

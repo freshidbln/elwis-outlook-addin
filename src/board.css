@@ -92,3 +92,9 @@ tr.flash td { animation: flash 2.2s ease-out; }
 .tbl td.txt { padding: 0 8px; cursor: text; font-size: 12px; color: #3b4652; }
 .tbl td.txt:hover { box-shadow: inset 0 0 0 2px rgba(31,78,121,.35); }
 .txt-empty { color: #a3adb8; font-style: italic; }
+
+/* Kalkulation */
+.kalk-chip { font: inherit; font-size: 10.5px; font-weight: 600; margin-left: 6px; padding: 1px 6px; border-radius: 9px; border: 1px solid #b7dfc9; background: #e8f7ef; color: #037f4c; cursor: pointer; }
+.kalk-chip:hover { background: #d4f0e1; }
+td.act { white-space: nowrap; }
+td.act .open-btn + .open-btn { margin-left: 4px; }

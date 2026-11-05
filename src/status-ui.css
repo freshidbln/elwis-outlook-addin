@@ -48,3 +48,15 @@
 .dc-comment .txt { white-space: pre-wrap; color: #1d2733; }
 .dc-comment .txt.empty { color: #8a96a3; font-style: italic; }
 .link-btn { font: inherit; font-size: 11px; color: #1f4e79; background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
+
+/* Kalkulation an der Vertriebskarte */
+.dc-kalk { margin-top: 10px; border: 1px solid #e2e7ee; border-radius: 6px; padding: 6px 8px; font-size: 12px; }
+.dc-kalk .lbl { display: flex; justify-content: space-between; align-items: center; font-size: 10.5px; color: #5d6b7a; margin-bottom: 2px; }
+.dc-kalk .txt.empty { color: #8a96a3; font-style: italic; }
+.dc-kalk .kalk-sum { font-weight: 600; color: #1d2733; margin-bottom: 4px; }
+.kalk-tbl { width: 100%; border-collapse: collapse; font-size: 11px; font-variant-numeric: tabular-nums; }
+.kalk-tbl th { text-align: right; font-weight: 600; color: #5d6b7a; border-bottom: 1px solid #e2e7ee; padding: 2px 4px; }
+.kalk-tbl td { text-align: right; padding: 2px 4px; border-bottom: 1px solid #f1f3f6; }
+.kalk-tbl th:first-child, .kalk-tbl td:first-child { text-align: left; }
+.dc-kalk .kalk-k { margin-top: 4px; font-size: 10.5px; color: #8a5a00; }
+.dc-kalk .kalk-hint { margin-top: 4px; font-size: 11px; color: #8a5a00; }

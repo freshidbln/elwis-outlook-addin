@@ -5,6 +5,7 @@ import { provider } from './data.js';
 import { STATUS_FIELDS, PHASES, RULES, computePhase } from './orders.js';
 import { SALES_FIELDS, SALES_PHASES, SALES_RULES, SALES_COMMENT, computeSalesPhase, overdueDays } from './sales.js';
 import { statusChip, showPicker, showTextEditor, colorOf, escHtml as esc, fmtDate } from './status-ui.js';
+import { kalkFor, kalkUrl, kalkSummary, kalkDate, kalkReset } from './kalk.js';
 
 if (typeof window.Office === 'undefined') window.Office = { onReady: (cb) => setTimeout(() => cb({ host: null }), 0) };
 
@@ -35,7 +36,10 @@ const VIEWS = {
     list: () => provider.listDeals(),
     update: async (id, k, v) => { const r = await provider.updateDeal(id, k, v); return { item: r.deal, applied: r.applied, created: r.createdOrder }; },
     overdue: (d, key) => key === 'entscheidung' && overdueDays(d, todayIso()) > 0,
-    badge: (d) => { const n = overdueDays(d, todayIso()); return n ? `<span class="od">überfällig ${n} T</span>` : (d.reactivated ? '<span class="od re">Wiedervorlage</span>' : ''); },
+    badge: (d) => { const n = overdueDays(d, todayIso()); const k = kalkFor(d.id);
+      return (n ? `<span class="od">überfällig ${n} T</span>` : (d.reactivated ? '<span class="od re">Wiedervorlage</span>' : ''))
+        + (k ? `<button class="kalk-chip" data-kalk="${d.id}" title="${esc(kalkSummary(k) + ' · ' + kalkDate(k))}">kalkuliert</button>` : ''); },
+    action: (d) => `<button class="open-btn" data-kalk="${d.id}" title="Kalkulation öffnen">∑</button>`,
     elwisKind: 'inquiry'
   },
   orders: {
@@ -72,7 +76,8 @@ async function init() {
   $('officeFilter').addEventListener('change', render);
   $('rulesBtn').addEventListener('click', toggleRules);
   $('rulesClose').addEventListener('click', toggleRules);
-  $('resetBtn').addEventListener('click', async () => { provider.resetOrders(); await load(); toast('Demo zurückgesetzt.'); });
+  $('resetBtn').addEventListener('click', async () => { provider.resetOrders(); kalkReset(); await load(); toast('Demo zurückgesetzt.'); });
+  $('kalkBtn').addEventListener('click', () => window.open(kalkUrl(null), '_blank'));
   document.querySelectorAll('[data-view]').forEach((b) => b.addEventListener('click', () => switchView(b.dataset.view)));
   window.addEventListener('storage', (e) => { if (e.key && e.key.startsWith('elwis-demo-')) load(); });
   await switchView(viewKey);
@@ -110,7 +115,8 @@ function render() {
   const byPhase = Object.fromEntries(v.phases.map((p) => [p.key, []]));
   list.forEach((o) => byPhase[v.phaseOf(o)].push(o));
   const tw = v.textCol ? v.textCol.w : 0;
-  const totalW = 260 + v.infoCols.reduce((s, c) => s + c.w, 0) + v.fields.reduce((s, f) => s + statusW(f), 0) + tw + 44;
+  const aw = v.action ? 76 : 44; // Spalte für Aktionen (Vertrieb: Kalkulation + Elwis)
+  const totalW = 260 + v.infoCols.reduce((s, c) => s + c.w, 0) + v.fields.reduce((s, f) => s + statusW(f), 0) + tw + aw;
 
   $('board').innerHTML = v.phases.map((ph) => {
     const rows = byPhase[ph.key];
@@ -121,7 +127,7 @@ function render() {
         <span class="grp-count">${rows.length} ${rows.length === 1 ? v.unit[0] : v.unit[1]}${isCol ? ' · eingeklappt' : ''}</span>
       </button>
       ${isCol ? '' : `<div class="tbl-wrap"><table class="tbl" style="width:${totalW}px">
-        <colgroup><col style="width:260px">${v.infoCols.map((c) => `<col style="width:${c.w}px">`).join('')}${v.fields.map((f) => `<col style="width:${statusW(f)}px">`).join('')}${tw ? `<col style="width:${tw}px">` : ''}<col style="width:44px"></colgroup>
+        <colgroup><col style="width:260px">${v.infoCols.map((c) => `<col style="width:${c.w}px">`).join('')}${v.fields.map((f) => `<col style="width:${statusW(f)}px">`).join('')}${tw ? `<col style="width:${tw}px">` : ''}<col style="width:${aw}px"></colgroup>
         <thead><tr>
           <th class="sticky">${viewKey === 'sales' ? 'Deal' : 'Auftrag'}</th>
           ${v.infoCols.map((c) => `<th class="ro" title="Kommt aus Elwis">${esc(c.label)}</th>`).join('')}
@@ -148,6 +154,7 @@ function render() {
     showTextEditor(td, V().textCol.label, o[k] || '', (val) => { if (val !== (o[k] || '')) change(id, k, val); });
   }));
   $('board').querySelectorAll('[data-open]').forEach((b) => b.addEventListener('click', () => openInElwis(items.find((x) => x.id === b.dataset.open))));
+  $('board').querySelectorAll('[data-kalk]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); window.open(kalkUrl(items.find((x) => x.id === b.dataset.kalk)), '_blank'); }));
   if (flashId) {
     const tr = document.querySelector(`tr[data-id="${flashId}"]`);
     if (tr) { tr.classList.add('flash'); tr.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
@@ -165,7 +172,7 @@ function renderRow(o) {
     ${v.infoCols.map((c) => `<td class="ro${c.align === 'right' ? ' right' : ''}">${c.key === 'amount' ? money(o.amount, o.currency) : c.date ? fmtDate(o[c.key]) : (c.key === 'sc' && !o.sc && o.fromDeal) ? '<span class="neu-sc" title="SC-Nummer vergibt Elwis beim Anlegen der Sales Order">neu</span>' : esc(o[c.key] || '')}</td>`).join('')}
     ${v.fields.map((f) => `<td class="st${f.type === 'date' ? ' dt' : ''}${f.type === 'date' && v.overdue(o, f.key) ? ' late' : ''}" data-cell="${o.id}|${f.key}" title="${esc(f.label)}">${statusChip(f.key, o[f.key], { full: f.type !== 'date' })}</td>`).join('')}
     ${v.textCol ? `<td class="txt" data-text="${o.id}" title="${esc(o[v.textCol.key] || 'Klicken zum Schreiben')}">${o[v.textCol.key] ? esc(o[v.textCol.key]) : '<span class="txt-empty">+ Kommentar</span>'}</td>` : ''}
-    <td class="ro"><button class="open-btn" data-open="${o.id}" title="In Elwis öffnen">↗</button></td>
+    <td class="ro act">${v.action ? v.action(o) : ''}<button class="open-btn" data-open="${o.id}" title="In Elwis öffnen">↗</button></td>
   </tr>`;
 }
 

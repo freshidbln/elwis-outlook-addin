@@ -47,11 +47,27 @@ Ein Projekt hat im Add-in immer **genau eine Statuskarte**:
 - **„Übersicht“** (Button oben im Add-in) öffnet `board.html` mit zwei Ansichten im gleichen Look:
   *Anfrage & Vertrieb* → *Auftragsabwicklung*. Gruppen werden aus den Status berechnet,
   Status lassen sich direkt ändern, Summen und Filter (Verkäufer/PM, Standort).
-- **Regeln:** `src/sales.js` (V1–V6, T1–T2, ersetzt 22 Automationen) und `src/orders.js`
+- **Regeln:** `src/sales.js` (V1–V7, T1–T2, ersetzt 22 Automationen) und `src/orders.js`
   (R1–R7, T1–T5, ersetzt 20 Automationen). Live laufen sie als Server-Abläufe in Elwis.
 - **PID als durchgehende Nummer:** Beide Boards und das Add-in führen über die PID (Project ID), von der Anfrage bis zur Rechnung; AN-Nummern entfallen.
 - **Felder:** „Regeln & Felder“ im Board zeigt, was in Elwis schon existiert und was neu anzulegen ist.
 - In der Demo werden Änderungen nur im Browser gespeichert („Demo zurücksetzen“ im Board).
+
+## Kalkulator (OEM-Kalkulation)
+
+Der Kalkulator ersetzt die Excel-Vorlage „Automatic Calculation V15“ und liegt unter `kalkulator/`
+(statischer Build der Browser-App *fresh-id-calculator*).
+
+- **Aus der Vertriebskarte:** „Kalkulieren“ öffnet den Kalkulator mit Projekt, PID und Kunde.
+  „Ergebnis an Vertrieb übergeben“ schreibt je Staffel Menge, Selbstkosten, VK und DB an den Deal:
+  Die Karte zeigt die Staffeln, das Board markiert den Deal als „kalkuliert“ (Regel V7).
+  Beim nächsten Öffnen wird der gespeicherte Stand geladen. Bei „Kontrolle (Preise)“ ohne Kalkulation erscheint ein Hinweis.
+- **Im Board:** Knopf „Kalkulator“ oben, „∑“ je Deal.
+- **Rechenkern:** zeilengetreue Portierung der Excel-Vorlage, gegen die Vorlage geprüft (33 echte Staffeln,
+  1.360 Zufallsfälle). Rechenfehler der Vorlage sind korrigiert (K1–K13); weicht ein Ergebnis deshalb von Excel ab,
+  zeigt der Kalkulator den Excel-Wert und den Grund.
+- **Live (Stufe 2):** Übergabe als Angebotspositionen am Elwis-Angebot statt im Browser-Speicher.
+- Neu bauen: im Kalkulator-Projekt `npx vite build --config vite.demo.config.ts`, dann `dist-demo/` nach `kalkulator/` kopieren.
 
 ## Aufbau
 
@@ -69,6 +85,8 @@ Ein Projekt hat im Add-in immer **genau eine Statuskarte**:
 | `src/refs.js` | Erkennung von PID-, SC- und Belegnummern im Betreff (alle gelebten Schreibweisen) |
 | `src/status-ui.js`, `src/status-ui.css` | Status-Chips und Auswahl (Add-in und Board) |
 | `board.html`, `src/board.js`, `src/board.css` | Übersicht: Anfrage & Vertrieb, Auftragsabwicklung |
+| `src/kalk.js` | Verbindung Vertrieb ↔ Kalkulator (Öffnen mit Deal, Übergabe der Staffeln) |
+| `kalkulator/` | Kalkulator (Build), Tariftabellen unter `kalkulator/data/` |
 | `backend/` | Vermittlungs-Backend für die Live-Version (nur lesend, noch nicht in Betrieb) |
 
 ## Live-Version (Stufe 1, nur lesend)

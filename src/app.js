@@ -5,6 +5,7 @@ import { demoEmails, STAFF } from './mock-data.js';
 import { STATUS_FIELDS, PHASE, computePhase } from './orders.js';
 import { SALES_FIELDS, SALES_PHASE, computeSalesPhase, overdueDays } from './sales.js';
 import { statusChip, showPicker, showTextEditor, closePicker } from './status-ui.js';
+import { kalkFor, kalkUrl, kalkSummary, kalkDate, kalkTable } from './kalk.js';
 
 // Falls office.js nicht geladen werden konnte (z. B. lokale Vorschau ohne Internet)
 if (typeof window.Office === 'undefined') {
@@ -439,12 +440,38 @@ function renderDealCard(d) {
       <button class="btn small" data-dc-snooze="${d.id}">Nachgefasst: +7 Tage</button></div>` : ''}
     ${d.reactivated ? '<div class="dc-note">Wiedervorlage: Das Projekt war „On Hold“ und ist wieder offen.</div>' : ''}
     <div class="oc-grid">${[...fields, ...dates].map(tile).join('')}</div>
+    ${renderKalk(d)}
     <div class="dc-comment"><div class="lbl"><span>Kommentar / Übergabe</span><button class="link-btn" data-dc-comment="${d.id}">${d.comment ? 'Bearbeiten' : 'Schreiben'}</button></div>
       <div class="txt${d.comment ? '' : ' empty'}">${d.comment ? esc(d.comment) : 'Noch kein Kommentar'}</div></div>
     ${d.vstatus === 'Gewonnen' ? `<button class="btn primary dc-handover" data-dc-handover="${d.id}">An Auftragsabwicklung übergeben →</button>` : ''}
     ${applied?.length ? `<div class="oc-applied">${applied.map((a) => `<div>${esc(a)}</div>`).join('')}</div>` : ''}
     <div class="stage2">Nach der Übergabe erscheint hier der Auftragsstatus.${provider.isDemo ? ' Demo: nur in diesem Browser gespeichert.' : ''}</div>
   </div>`;
+}
+
+// Kalkulation (OEM-Kalkulator): Ergebnis je Staffel an der Vertriebskarte, Öffnen mit dem Deal
+function renderKalk(d) {
+  const k = kalkFor(d.id);
+  const hint = d.vstatus === 'Kontrolle (Preise)' && !k ? '<div class="kalk-hint">Für die Preisfreigabe fehlt noch die Kalkulation.</div>' : '';
+  return `<div class="dc-kalk">
+    <div class="lbl"><span>Kalkulation${k ? ' · ' + esc(kalkDate(k)) : ''}</span>
+      <button class="link-btn" data-dc-kalk="${d.id}">${k ? 'Öffnen' : 'Kalkulieren'}</button></div>
+    ${k ? `<div class="kalk-sum">${esc(kalkSummary(k))}</div>${kalkTable(k, esc)}${k.korrekturen?.length ? `<div class="kalk-k" title="Korrigierte Fehler der Excel-Vorlage">Abweichend von der Excel-Vorlage (${esc(k.korrekturen.join(', '))})</div>` : ''}` : `<div class="txt empty">Noch nicht kalkuliert</div>`}
+    ${hint}
+  </div>`;
+}
+
+function openKalk(deal) {
+  const url = kalkUrl(deal);
+  // wie das Board: im Outlook-Dialog (gleicher Speicher wie das Add-in), sonst neuer Tab
+  if (state.inOutlook && Office.context.ui?.displayDialogAsync) {
+    Office.context.ui.displayDialogAsync(url, { height: 92, width: 92, promptBeforeOpen: false }, (res) => {
+      if (res.status !== Office.AsyncResultStatus.Succeeded) window.open(url, '_blank');
+      else res.value.addEventHandler(Office.EventType.DialogEventReceived, () => refreshViews());
+    });
+  } else {
+    window.open(url, '_blank');
+  }
 }
 
 async function changeDeal(id, key, val) {
@@ -477,6 +504,10 @@ function wireDealTiles(root) {
       if (val !== cur && !(await changeDeal(id, 'comment', val))) return;
       changeDeal(id, 'vstatus', 'Übergeben');
     }, { okLabel: 'Übergeben', hint: 'Was muss die Projektleitung wissen? Der Text erscheint am Auftrag.' });
+  }));
+  root.querySelectorAll('[data-dc-kalk]').forEach((b) => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openKalk(dealSeen[b.dataset.dcKalk]);
   }));
   root.querySelectorAll('[data-dc-snooze]').forEach((b) => b.addEventListener('click', async (e) => {
     e.stopPropagation();
@@ -513,7 +544,7 @@ function refreshViews() {
 function openBoard() {
   const fp = state.ctx?.focus?.project;
   const view = fp ? (provider.ordersForProject(fp.id).length ? '&view=orders' : '&view=sales') : '';
-  const url = new URL('board.html?v=1.4.2' + view, location.href).toString();
+  const url = new URL('board.html?v=1.5.0' + view, location.href).toString();
   if (state.inOutlook && Office.context.ui?.displayDialogAsync) {
     Office.context.ui.displayDialogAsync(url, { height: 90, width: 90, promptBeforeOpen: false }, (res) => {
       if (res.status !== Office.AsyncResultStatus.Succeeded) window.open(url, '_blank');

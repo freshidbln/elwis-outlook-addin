@@ -1,0 +1,893 @@
+[
+ {
+  "id": "HK1185",
+  "filename": "HK project # 1185 _ Inquiry Hair Ties __ 618399.msg",
+  "project_no": "HK 1185",
+  "received_at": "2025-10-02",
+  "article_name": "Hair Ties (3er Set in PVC Box)",
+  "description": "3 hair rubbers (TPU, eco-friendly) packed in a transparent PVC box. 1-color printing 'Priorin' logo on box at 2 positions.",
+  "material": "PVC box, 100% TPU hair rubbers",
+  "product_size": "Box 4x4x4 cm; hairband ~3.5 cm Innendurchmesser",
+  "color": "Box transparent; hair ties bronze-golden + transparent",
+  "branding": "1-color printing 'Priorin' logo, 2 positions on box",
+  "packaging_notes": "50 boxes per polybag with sticker, 500 sets per export carton",
+  "tiers": [
+   {
+    "qty": 1000,
+    "price_usd": 1.8,
+    "unit": "set"
+   }
+  ],
+  "fob_port": "Ex-Works (Ningbo factory)",
+  "fob_country": "China",
+  "incoterm_offered": "EX-WORKS USD",
+  "carton": {
+   "length_cm": 37,
+   "width_cm": 33,
+   "height_cm": 34,
+   "items_per_carton": 500,
+   "gw_kg": 9.8,
+   "nw_kg": 8.8
+  },
+  "extra_charges": [
+   {
+    "name": "Inspection",
+    "amount_usd": 280
+   },
+   {
+    "name": "Printing setup",
+    "amount_usd": 160,
+    "note": "per design"
+   },
+   {
+    "name": "Customized sample",
+    "amount_usd": 160
+   }
+  ],
+  "validity_days": 14,
+  "lead_time": "35 working days after sample approval",
+  "supplier_hs_code": "3926909090",
+  "hs_analysis": {
+   "supplier_code": "3926.90.90",
+   "supplier_description": "Other articles of plastics, NES",
+   "verdict": "wahrscheinlich falsch",
+   "confidence": 0.75,
+   "suggestions": [
+    {
+     "code": "9615.11.00",
+     "label": "Combs, hair-slides and the like, of hard rubber or plastics",
+     "duty_rate": 0.027,
+     "rationale": "Haargummis sind Haarschmuck/Haarspangen-Kategorie. 9615 ist die spezifischere Position für Haaraccessoires aus Kunststoff."
+    },
+    {
+     "code": "3926.20.00",
+     "label": "Articles of apparel and clothing accessories of plastics",
+     "duty_rate": 0.065,
+     "rationale": "Alternativ als Bekleidungszubehör aus Kunststoff klassifizierbar."
+    },
+    {
+     "code": "9615.19.00",
+     "label": "Other combs, hair-slides",
+     "duty_rate": 0.027,
+     "rationale": "Falls 9615.11 nicht greift."
+    }
+   ],
+   "recommended_code": "9615.11.00",
+   "recommended_duty_rate": 0.027
+  }
+ },
+ {
+  "id": "HK1236",
+  "filename": "HK project # 1236_ Inquiry Sports Bag __ 618514.msg",
+  "project_no": "HK 1236",
+  "received_at": "2025-11-06",
+  "article_name": "Sports Bag (Kieser Training)",
+  "description": "Sport bag with adjustable removable shoulder strap, large main compartment with high-quality zipper, small front pocket.",
+  "material": "600D polyester with PVC coated interior; not water repellent",
+  "product_size": "50 x 25 x 25 cm",
+  "color": "schwarz",
+  "branding": "1c pad print front (Kieser Training Logo white+blue), 4c label print 2 positions (CMYK)",
+  "packaging_notes": "Bulk packaging, no poly bag",
+  "tiers": [
+   {
+    "qty": 2500,
+    "price_usd": 5.04,
+    "unit": "pc"
+   },
+   {
+    "qty": 5000,
+    "price_usd": 4.73,
+    "unit": "pc"
+   }
+  ],
+  "fob_port": "Xiamen",
+  "fob_country": "China",
+  "incoterm_offered": "FOB USD",
+  "carton": {
+   "length_cm": 53,
+   "width_cm": 33,
+   "height_cm": 48,
+   "items_per_carton": 30,
+   "gw_kg": 17,
+   "nw_kg": 16
+  },
+  "extra_charges": [
+   {
+    "name": "Inspection",
+    "amount_usd": 280
+   },
+   {
+    "name": "Quality sample",
+    "amount_usd": 150,
+    "note": "/pc"
+   },
+   {
+    "name": "Printing setup",
+    "amount_usd": 280,
+    "note": "per design"
+   }
+  ],
+  "validity_days": 14,
+  "lead_time": "50–60 working days after sample approval",
+  "supplier_hs_code": "4202920000",
+  "hs_analysis": {
+   "supplier_code": "4202.92.00",
+   "supplier_description": "Trunks/cases mit Außenfläche aus Kunststoff oder Textil (Oberkategorie)",
+   "verdict": "zu generisch — fehlt Detail-Subheading",
+   "confidence": 0.85,
+   "suggestions": [
+    {
+     "code": "4202.92.98",
+     "label": "Travel/sports bags with outer surface of man-made textile fibres, other",
+     "duty_rate": 0.027,
+     "rationale": "Sporttasche aus Polyester (Chemiefaser) — exakte Subheading laut EU-TARIC."
+    },
+    {
+     "code": "4202.92.91",
+     "label": "Travel/sports bags with outer surface of textile, other materials",
+     "duty_rate": 0.027,
+     "rationale": "Falls Polyestergewebe nicht als 'man-made fibres' klassifiziert wird."
+    }
+   ],
+   "recommended_code": "4202.92.98",
+   "recommended_duty_rate": 0.027
+  }
+ },
+ {
+  "id": "HK1132",
+  "filename": "Inquiry Cotton Bag __ 618336 ( HK#1132).msg",
+  "project_no": "HK 1132",
+  "received_at": "2025-09-10",
+  "article_name": "Cotton Bag (Klosterfrau)",
+  "description": "Cotton bag with 2 long handles, sewn with cross stitching. 4c CMYK printing on 1 side. 1c stitch label inside.",
+  "material": "100% Cotton (Oeko-Tex), 140 g/m²",
+  "product_size": "42 x 38 cm; Henkel 2 x 70 cm",
+  "color": "natural cotton",
+  "branding": "4c CMYK print 1 side; 1c stitch label inside",
+  "packaging_notes": "Bulk in big polybag plus outer carton",
+  "tiers": [
+   {
+    "qty": 55000,
+    "price_usd": 0.73,
+    "unit": "pc"
+   }
+  ],
+  "fob_port": "Kolkata (India)",
+  "fob_country": "India",
+  "incoterm_offered": "FOB USD",
+  "carton": {
+   "length_cm": 60,
+   "width_cm": 40,
+   "height_cm": 30,
+   "items_per_carton": 200,
+   "gw_kg": 19,
+   "nw_kg": 17
+  },
+  "extra_charges": [
+   {
+    "name": "Inspection",
+    "amount_usd": 280
+   },
+   {
+    "name": "Customized sample",
+    "amount_usd": 200
+   }
+  ],
+  "validity_days": 14,
+  "lead_time": "70 working days after sample approval",
+  "supplier_hs_code": "4202220000",
+  "hs_analysis": {
+   "supplier_code": "4202.22.00",
+   "supplier_description": "Handtaschen mit Außenfläche aus Kunststoff oder Spinnstoffen (Oberkategorie)",
+   "verdict": "wahrscheinlich falsch — bzw. zu generisch",
+   "confidence": 0.7,
+   "suggestions": [
+    {
+     "code": "4202.22.90",
+     "label": "Handbags with outer surface of textile materials, other",
+     "duty_rate": 0.027,
+     "rationale": "Wenn als Handtasche eingestuft (mit Tragehenkel zum Tragen am Arm)."
+    },
+    {
+     "code": "6305.20.00",
+     "label": "Sacks and bags, of cotton, for packing of goods",
+     "duty_rate": 0.0,
+     "rationale": "Einfacher Baumwollbeutel ohne Verschluss → 6305.20 (zollfrei). EU-Praxis: bei reinen Werbe-/Shoppingbeuteln ohne Reißverschluss oft hier eingestuft."
+    },
+    {
+     "code": "6307.90.98",
+     "label": "Other made-up textile articles",
+     "duty_rate": 0.07,
+     "rationale": "Falls weder Tasche im engeren Sinn noch Sack."
+    }
+   ],
+   "recommended_code": "6305.20.00",
+   "recommended_duty_rate": 0.0
+  }
+ },
+ {
+  "id": "HK1452",
+  "filename": "Quoation HK project #1452 _ Inquiry plush keychain __ 618867.msg",
+  "project_no": "HK 1452",
+  "received_at": "2026-04-17",
+  "article_name": "Plüsch-Schlüsselanhänger (Mini-Dose)",
+  "description": "Plush keychain shaped like mini drink can with colorful fruit-themed embroidery and decorative strap. Includes metal keyring and clasp.",
+  "material": "Soft plush polyester fabric + metal keyring/clasp",
+  "product_size": "8–10 cm Höhe, 5–6 cm Durchmesser; 12–15 cm inkl. Strap",
+  "color": "close to PMS (Frucht-Designs)",
+  "branding": "Stickerei (vereinfachtes Logo)",
+  "packaging_notes": "Recycling-Polybag mit 1c Sticker pro Stück",
+  "tiers": [
+   {
+    "qty": 10000,
+    "price_usd": 1.66,
+    "unit": "pc"
+   },
+   {
+    "qty": 20000,
+    "price_usd": 1.57,
+    "unit": "pc"
+   },
+   {
+    "qty": 30000,
+    "price_usd": 1.41,
+    "unit": "pc"
+   }
+  ],
+  "fob_port": "Shanghai",
+  "fob_country": "China",
+  "incoterm_offered": "FOB USD",
+  "carton": {
+   "length_cm": 40,
+   "width_cm": 30,
+   "height_cm": 65,
+   "items_per_carton": 100,
+   "gw_kg": 5,
+   "nw_kg": 4
+  },
+  "extra_charges": [
+   {
+    "name": "Inspection",
+    "amount_usd": 280
+   },
+   {
+    "name": "Quality sample",
+    "amount_usd": 120,
+    "note": "/pc"
+   },
+   {
+    "name": "Printing setup",
+    "amount_usd": 300,
+    "note": "/design"
+   }
+  ],
+  "validity_days": 14,
+  "lead_time": "55–70 working days",
+  "supplier_hs_code": "95030021",
+  "hs_analysis": {
+   "supplier_code": "9503.00.21",
+   "supplier_description": "Stuffed dolls (gefüllte Puppen)",
+   "verdict": "falsch — kein Spielzeug/Puppe, sondern Schlüsselanhänger",
+   "confidence": 0.9,
+   "suggestions": [
+    {
+     "code": "6307.90.98",
+     "label": "Other made-up textile articles",
+     "duty_rate": 0.07,
+     "rationale": "Schlüsselanhänger aus Plüsch (Textilware) → meist als 'andere konfektionierte Textilware' klassifiziert."
+    },
+    {
+     "code": "9503.00.99",
+     "label": "Other toys, NES (other than dolls)",
+     "duty_rate": 0.0,
+     "rationale": "Falls als Spielzeug-Charakter eingestuft (nicht typisch für reinen Anhänger)."
+    },
+    {
+     "code": "8308.10.00",
+     "label": "Hooks, eyes etc. for travel goods etc.; key rings of base metal",
+     "duty_rate": 0.027,
+     "rationale": "Nur für den metallenen Schlüsselring-Teil — der Plüsch-Charakter bestimmt aber die Hauptklassifikation."
+    }
+   ],
+   "recommended_code": "6307.90.98",
+   "recommended_duty_rate": 0.07
+  }
+ },
+ {
+  "id": "HK1416",
+  "filename": "Quotation HK project # 1416 _ Inquiry Bottle __ 618632 -- Loosh Bottle 2 .msg",
+  "project_no": "HK 1416",
+  "received_at": "2026-03-20",
+  "article_name": "Loosh Bottle 2",
+  "description": "Tritan reusable drinking bottle, BPA-free. Body matte dark, lid 50% red + 50% black. 4c all-over print on single carton box.",
+  "material": "Tritan (BPA-free thermoplastic)",
+  "product_size": "ca. 225 x 90 mm, ~145g",
+  "color": "Body matt dunkel; Deckel 50% rot/50% schwarz",
+  "branding": "4c CMYK Druck rundum auf Einzelkarton",
+  "packaging_notes": "Each pcs in high-quality Einzelkarton; 50 Stück pro Exportkarton",
+  "tiers": [
+   {
+    "qty": 10000,
+    "price_usd": 3.32,
+    "unit": "pc"
+   },
+   {
+    "qty": 20000,
+    "price_usd": 3.2,
+    "unit": "pc"
+   }
+  ],
+  "fob_port": "Ningbo",
+  "fob_country": "China",
+  "incoterm_offered": "FOB USD",
+  "carton": {
+   "length_cm": 36,
+   "width_cm": 36,
+   "height_cm": 56,
+   "items_per_carton": 50,
+   "gw_kg": 7,
+   "nw_kg": 6
+  },
+  "extra_charges": [
+   {
+    "name": "Inspection",
+    "amount_usd": 280
+   },
+   {
+    "name": "Quality sample",
+    "amount_usd": 160,
+    "note": "/pc"
+   },
+   {
+    "name": "Mould",
+    "amount_usd": 21000,
+    "note": "/design"
+   },
+   {
+    "name": "Customized sample",
+    "amount_usd": 300,
+    "note": "/pc/design"
+   }
+  ],
+  "validity_days": 14,
+  "lead_time": "70 working days after sample approval",
+  "supplier_hs_code": "3923300000",
+  "hs_analysis": {
+   "supplier_code": "3923.30.00",
+   "supplier_description": "Carboys, bottles, flasks etc. of plastics — für Verpackung/Beförderung von Waren",
+   "verdict": "falsch — Trinkflasche ist Haushaltsware, keine Verpackung",
+   "confidence": 0.92,
+   "suggestions": [
+    {
+     "code": "3924.10.00",
+     "label": "Tableware, kitchenware of plastics",
+     "duty_rate": 0.065,
+     "rationale": "Wiederverwendbare Trinkflasche zum persönlichen Gebrauch → Tafelware/Küchenutensil. fresh id verwendet diesen Code intern bereits für ähnliche Artikel."
+    },
+    {
+     "code": "3924.90.00",
+     "label": "Other household articles of plastics",
+     "duty_rate": 0.065,
+     "rationale": "Alternativ falls 3924.10 nicht greift."
+    }
+   ],
+   "recommended_code": "3924.10.00",
+   "recommended_duty_rate": 0.065
+  }
+ },
+ {
+  "id": "HK1339",
+  "filename": "Quotation HK project #1339(1) _ Inquiry Salt + Pepper __ 618678 - from Vietnam factory .msg",
+  "project_no": "HK 1339",
+  "received_at": "2026-04-01",
+  "article_name": "Salt + Pepper Set (ImmoScout)",
+  "description": "Salt and pepper shakers in custom shape, packed in high-quality sturdy carton suitable for individual UPS/DHL shipping in Germany.",
+  "material": "Porzellan/Keramik (laut HS-Code 6911)",
+  "product_size": "siehe Anhang",
+  "color": "close to PMS",
+  "branding": "2c logo print (ImmoScout)",
+  "packaging_notes": "Each set in high-quality carton box, 60 sets per export carton",
+  "tiers": [
+   {
+    "qty": 25000,
+    "price_usd": 2.54,
+    "unit": "set"
+   },
+   {
+    "qty": 50000,
+    "price_usd": 2.49,
+    "unit": "set"
+   },
+   {
+    "qty": 100000,
+    "price_usd": 2.46,
+    "unit": "set"
+   },
+   {
+    "qty": 200000,
+    "price_usd": 2.39,
+    "unit": "set"
+   }
+  ],
+  "fob_port": "Haiphong",
+  "fob_country": "Vietnam",
+  "incoterm_offered": "FOB USD",
+  "carton": {
+   "length_cm": 42,
+   "width_cm": 35,
+   "height_cm": 43,
+   "items_per_carton": 60,
+   "gw_kg": 17,
+   "nw_kg": 16.5
+  },
+  "extra_charges": [
+   {
+    "name": "Inspection",
+    "amount_usd": 280
+   },
+   {
+    "name": "Mould",
+    "amount_usd": 400,
+    "note": "/set"
+   },
+   {
+    "name": "Customized sample",
+    "amount_usd": 300,
+    "note": "/set"
+   }
+  ],
+  "validity_days": 14,
+  "lead_time": "90 working days after sample approval",
+  "supplier_hs_code": "6911101900",
+  "hs_analysis": {
+   "supplier_code": "6911.10.19",
+   "supplier_description": "Tableware/kitchenware of porcelain — Subheading existiert in dieser Form nicht im aktuellen CN",
+   "verdict": "falsche Subheading-Kodierung",
+   "confidence": 0.85,
+   "suggestions": [
+    {
+     "code": "6911.10.00",
+     "label": "Tableware and kitchenware, of porcelain or china",
+     "duty_rate": 0.12,
+     "rationale": "Standard EU-CN-Code für Porzellan-Tafelware. 6911.10.00 mit statistischen Untergliederungen (.10/.90)."
+    }
+   ],
+   "recommended_code": "6911.10.00",
+   "recommended_duty_rate": 0.12,
+   "warning": "Vietnam-Ursprung: Drittlandszoll 12% gilt; ggf. EU-Vietnam-FTA prüfen (EVFTA) für Präferenzzoll."
+  }
+ },
+ {
+  "id": "HK1426",
+  "filename": "RE_ Inquiry Ice Mould __ 618680 ( HK#1426).msg",
+  "project_no": "HK 1426",
+  "received_at": "2026-03-23",
+  "article_name": "Eiswürfelform 'Maiskolben' (Silikon)",
+  "description": "Silicone ice mould in corncob shape (similar to chainsaw reference). Embossed logo (no print on silicone).",
+  "material": "Silikon",
+  "product_size": "ca. 16 x 14 x 2 cm",
+  "color": "close to PMS",
+  "branding": "1c Logoprägung 1 Position",
+  "packaging_notes": "Recycling-Polybag mit 1c Sticker",
+  "tiers": [
+   {
+    "qty": 2500,
+    "price_usd": 0.93,
+    "unit": "pc"
+   },
+   {
+    "qty": 5000,
+    "price_usd": 0.87,
+    "unit": "pc"
+   },
+   {
+    "qty": 10000,
+    "price_usd": 0.83,
+    "unit": "pc"
+   }
+  ],
+  "fob_port": "Ningbo",
+  "fob_country": "China",
+  "incoterm_offered": "FOB USD",
+  "carton": {
+   "length_cm": 60,
+   "width_cm": 40,
+   "height_cm": 40,
+   "items_per_carton": 100,
+   "gw_kg": 11,
+   "nw_kg": 10
+  },
+  "extra_charges": [
+   {
+    "name": "Inspection",
+    "amount_usd": 280
+   },
+   {
+    "name": "Mould",
+    "amount_usd": 1375
+   },
+   {
+    "name": "Quality sample",
+    "amount_usd": 60
+   },
+   {
+    "name": "Customized sample",
+    "amount_usd": 150
+   }
+  ],
+  "validity_days": 14,
+  "lead_time": "40 working days after sample approval (+25d für neuen Mould)",
+  "supplier_hs_code": "3926909090",
+  "hs_analysis": {
+   "supplier_code": "3926.90.90",
+   "supplier_description": "Other articles of plastics, NES",
+   "verdict": "falsch — Silikon-Eiswürfelform ist Küchenartikel",
+   "confidence": 0.95,
+   "suggestions": [
+    {
+     "code": "3924.10.00",
+     "label": "Tableware, kitchenware of plastics",
+     "duty_rate": 0.065,
+     "rationale": "Eiswürfelform ist eindeutig Küchenutensil. fresh id verwendet diesen Code intern bereits ('3924 10 00 90 // 6,5%')."
+    }
+   ],
+   "recommended_code": "3924.10.00",
+   "recommended_duty_rate": 0.065
+  }
+ },
+ {
+  "id": "HK1018",
+  "filename": "RE_ Inquiry concrete Clipboard Base __ 618891 ( HK#1018).msg",
+  "project_no": "HK 1018",
+  "received_at": "2026-04-21",
+  "article_name": "Klemmbrett-Basis aus Beton",
+  "description": "Concrete clipboard holder (sandstone casting in concrete look) with felt on bottom. Slit approx. 15mm width x 1.5mm depth.",
+  "material": "Sandstein-Guss (Beton-Optik)",
+  "product_size": "12.5 x 5 x 5 cm",
+  "color": "grau/Beton",
+  "branding": "1c schwarzer Druck Front + Rück",
+  "packaging_notes": "Each in bubble wrap with 1c sticker",
+  "tiers": [
+   {
+    "qty": 3000,
+    "price_usd": 0.97,
+    "unit": "pc"
+   },
+   {
+    "qty": 5000,
+    "price_usd": 0.96,
+    "unit": "pc"
+   },
+   {
+    "qty": 10000,
+    "price_usd": 0.94,
+    "unit": "pc"
+   },
+   {
+    "qty": 20000,
+    "price_usd": 0.91,
+    "unit": "pc"
+   }
+  ],
+  "fob_port": "Xiamen",
+  "fob_country": "China",
+  "incoterm_offered": "FOB USD (Profit Split)",
+  "carton": {
+   "length_cm": 29,
+   "width_cm": 27,
+   "height_cm": 21,
+   "items_per_carton": 24,
+   "gw_kg": 15,
+   "nw_kg": 13
+  },
+  "extra_charges": [
+   {
+    "name": "Inspection",
+    "amount_usd": 280
+   },
+   {
+    "name": "Protection coating add-on",
+    "amount_usd": 0.06,
+    "note": "/pc"
+   }
+  ],
+  "validity_days": 14,
+  "lead_time": "70 working days after sample approval",
+  "supplier_hs_code": "6810999000",
+  "hs_analysis": {
+   "supplier_code": "6810.99.00",
+   "supplier_description": "Other articles of cement, concrete or artificial stone",
+   "verdict": "plausibel",
+   "confidence": 0.85,
+   "suggestions": [
+    {
+     "code": "6810.99.00",
+     "label": "Other articles of cement, concrete or artificial stone",
+     "duty_rate": 0.0,
+     "rationale": "Korrekte EU-CN-Position für Kunststein-Artikel. Drittlandszoll 0%."
+    }
+   ],
+   "recommended_code": "6810.99.00",
+   "recommended_duty_rate": 0.0
+  }
+ },
+ {
+  "id": "HK1453",
+  "filename": "RE_ Inquiry contact lenses case __ 618865 ( HK#1453).msg",
+  "project_no": "HK 1453",
+  "received_at": "2026-04-16",
+  "article_name": "Kontaktlinsen-Tasche (Bausch und Lomb)",
+  "description": "Small pouch for daily contact lenses with mesh pockets, hanging hook, integrated mirror, internal 'L'/'R' print. Polyester.",
+  "material": "Polyester",
+  "product_size": "15 x 9 x 3-4 cm",
+  "color": "türkis (close to PMS)",
+  "branding": "1c print Bausch und Lomb Logo on lid; 1c stitch label inside",
+  "packaging_notes": "Each in OPP",
+  "tiers": [
+   {
+    "qty": 1000,
+    "price_usd": 4.46,
+    "unit": "pc"
+   },
+   {
+    "qty": 2000,
+    "price_usd": 3.79,
+    "unit": "pc"
+   },
+   {
+    "qty": 5000,
+    "price_usd": 3.24,
+    "unit": "pc"
+   }
+  ],
+  "fob_port": "Xiamen",
+  "fob_country": "China",
+  "incoterm_offered": "FOB USD",
+  "carton": {
+   "length_cm": 60,
+   "width_cm": 38,
+   "height_cm": 40,
+   "items_per_carton": 100,
+   "gw_kg": 11,
+   "nw_kg": 10
+  },
+  "extra_charges": [
+   {
+    "name": "Inspection",
+    "amount_usd": 280
+   },
+   {
+    "name": "Quality sample",
+    "amount_usd": 50
+   },
+   {
+    "name": "Customized sample",
+    "amount_usd": 130
+   }
+  ],
+  "validity_days": 14,
+  "lead_time": "55 working days after sample approval",
+  "supplier_hs_code": null,
+  "hs_analysis": {
+   "supplier_code": null,
+   "supplier_description": "Lieferant hat keine HS-Code angegeben",
+   "verdict": "vom Lieferanten nicht angegeben — eigene Klassifikation erforderlich",
+   "confidence": 0.85,
+   "suggestions": [
+    {
+     "code": "4202.32.90",
+     "label": "Articles of a kind normally carried in pocket or handbag, with outer surface of textile materials, of man-made fibres",
+     "duty_rate": 0.097,
+     "rationale": "Kleine Tasche (15x9 cm) für persönliche Gegenstände aus Polyester (Chemiefaser) → Pos. 4202.32 (Etuis/Kleinbehälter). fresh id verwendet intern '4202 92 19 // 9,7%' für ähnliche Tasche."
+    },
+    {
+     "code": "4202.92.19",
+     "label": "Travel/sports/etc. bags with outer surface of plastic sheeting",
+     "duty_rate": 0.097,
+     "rationale": "Falls als größere Tasche eingestuft."
+    }
+   ],
+   "recommended_code": "4202.32.90",
+   "recommended_duty_rate": 0.097
+  }
+ },
+ {
+  "id": "HK1427",
+  "filename": "RE_ Inquiry ice mould __ 618801 ( HK#1427).msg",
+  "project_no": "HK 1427",
+  "received_at": "2026-03-23",
+  "article_name": "Eiswürfelform 'Bayer Cross' (Silikon)",
+  "description": "Silicone ice cube mould (Bayer Cross logo embossed). Two variants: 4-cube version (11.5x11.5x5cm) and 1-cube version (5x5x5cm).",
+  "material": "Silikon BPA Free",
+  "product_size": "Var. A: 11.5 x 11.5 x 5 cm (4 Würfel); Var. B: 5 x 5 x 5 cm (1 Würfel)",
+  "color": "close to PMS",
+  "branding": "Bayer Cross eingeprägt; 1c Druck außen (Variante)",
+  "packaging_notes": "Each in 4c color box; 4-Würfel: 120 pcs/Karton, 1-Würfel: 380 pcs/Karton",
+  "tiers": [
+   {
+    "qty": 1000,
+    "price_usd": 1.15,
+    "unit": "pc",
+    "variant": "4 ice cubes"
+   },
+   {
+    "qty": 2500,
+    "price_usd": 1.0,
+    "unit": "pc",
+    "variant": "4 ice cubes"
+   },
+   {
+    "qty": 5000,
+    "price_usd": 0.91,
+    "unit": "pc",
+    "variant": "4 ice cubes"
+   },
+   {
+    "qty": 10000,
+    "price_usd": 0.83,
+    "unit": "pc",
+    "variant": "4 ice cubes"
+   },
+   {
+    "qty": 1000,
+    "price_usd": 0.74,
+    "unit": "pc",
+    "variant": "1 ice cube"
+   },
+   {
+    "qty": 2500,
+    "price_usd": 0.6,
+    "unit": "pc",
+    "variant": "1 ice cube"
+   },
+   {
+    "qty": 5000,
+    "price_usd": 0.52,
+    "unit": "pc",
+    "variant": "1 ice cube"
+   },
+   {
+    "qty": 10000,
+    "price_usd": 0.45,
+    "unit": "pc",
+    "variant": "1 ice cube"
+   }
+  ],
+  "fob_port": "Ningbo",
+  "fob_country": "China",
+  "incoterm_offered": "FOB USD",
+  "carton": {
+   "length_cm": 60,
+   "width_cm": 40,
+   "height_cm": 40,
+   "items_per_carton": 120,
+   "gw_kg": 11,
+   "nw_kg": 10,
+   "note": "4-Würfel-Variante; 1-Würfel = 380 pcs/Karton"
+  },
+  "extra_charges": [
+   {
+    "name": "Inspection",
+    "amount_usd": 280
+   },
+   {
+    "name": "Mould (4 cubes)",
+    "amount_usd": 1250
+   },
+   {
+    "name": "Mould (1 cube)",
+    "amount_usd": 1065
+   }
+  ],
+  "validity_days": 14,
+  "lead_time": "40 working days (+25d Mould)",
+  "supplier_hs_code": null,
+  "hs_analysis": {
+   "supplier_code": null,
+   "supplier_description": "vom Lieferanten nicht angegeben",
+   "verdict": "Klassifikation eigenverantwortlich",
+   "confidence": 0.95,
+   "suggestions": [
+    {
+     "code": "3924.10.00",
+     "label": "Tableware, kitchenware of plastics",
+     "duty_rate": 0.065,
+     "rationale": "Eiswürfelform aus Silikon = Küchenutensil. Identisch zu HK 1426. fresh id-internal Code passt: '3924 10 00 90 // 6,5%'."
+    }
+   ],
+   "recommended_code": "3924.10.00",
+   "recommended_duty_rate": 0.065
+  }
+ },
+ {
+  "id": "OATLY",
+  "filename": "dog_storage bowl - Oatly __ 618092.msg",
+  "project_no": "618092",
+  "received_at": "2025-12-23",
+  "article_name": "Oatly Schale (Edelstahl, ICE Bistro)",
+  "description": "Breakproof stainless steel bowl with anti-slip base, for storing/displaying small Oatly milk cartons in ICE train bistros. NOT for animal use.",
+  "material": "SS304 Edelstahl",
+  "product_size": "Ø 18.5 x H 6.8 cm",
+  "color": "schwarz / silber",
+  "branding": "1c weißer All-over-Print rundum",
+  "packaging_notes": "Each in OPP with 1c sticker; outer carton 40x30x20cm vorgegeben",
+  "tiers": [
+   {
+    "qty": 500,
+    "price_usd": 8.87,
+    "unit": "pc"
+   },
+   {
+    "qty": 1000,
+    "price_usd": 7.81,
+    "unit": "pc"
+   },
+   {
+    "qty": 5000,
+    "price_usd": 7.0,
+    "unit": "pc"
+   }
+  ],
+  "fob_port": "Ningbo",
+  "fob_country": "China",
+  "incoterm_offered": "FOB USD",
+  "carton": {
+   "length_cm": 40,
+   "width_cm": 29,
+   "height_cm": 29,
+   "items_per_carton": 18,
+   "gw_kg": 11,
+   "nw_kg": 10
+  },
+  "extra_charges": [
+   {
+    "name": "Inspection",
+    "amount_usd": 280
+   },
+   {
+    "name": "Customized sample",
+    "amount_usd": 150
+   }
+  ],
+  "validity_days": 14,
+  "lead_time": "55 working days",
+  "supplier_hs_code": "7323930000",
+  "hs_analysis": {
+   "supplier_code": "7323.93.00",
+   "supplier_description": "Tableware/kitchenware of stainless steel",
+   "verdict": "korrekt",
+   "confidence": 0.95,
+   "suggestions": [
+    {
+     "code": "7323.93.00",
+     "label": "Table, kitchen or other household articles, of stainless steel",
+     "duty_rate": 0.027,
+     "rationale": "Korrekt: Edelstahlschale ist Tafel-/Küchenartikel. EU Drittlandszoll 2.7%."
+    }
+   ],
+   "recommended_code": "7323.93.00",
+   "recommended_duty_rate": 0.027,
+   "warning": "Hinweis: Lieferant fordert schriftliche Bestätigung 'kein Stahl russischen Ursprungs' — wegen EU-Sanktionen erforderlich."
+  }
+ }
+]
