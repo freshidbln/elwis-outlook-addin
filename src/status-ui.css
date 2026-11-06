@@ -60,3 +60,19 @@
 .kalk-tbl th:first-child, .kalk-tbl td:first-child { text-align: left; }
 .dc-kalk .kalk-k { margin-top: 4px; font-size: 10.5px; color: #8a5a00; }
 .dc-kalk .kalk-hint { margin-top: 4px; font-size: 11px; color: #8a5a00; }
+
+/* Freigabe, Versionen, Protokoll */
+.kalk-anfrage { margin: 4px 0 6px; padding: 6px 8px; border-radius: 6px; background: #f3f7fb; border: 1px solid #d5e2ef; font-size: 11.5px; }
+.kalk-anfrage.mine { background: #fff7e6; border-color: #f5c46b; }
+.kalk-anfrage .kom { font-style: italic; color: #3a4654; margin: 2px 0; }
+.kalk-btns { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
+.kalk-ver { margin-top: 4px; font-size: 11.5px; }
+.kalk-ver summary { cursor: pointer; color: #1d2733; }
+.kalk-ver .kalk-tbl { margin-top: 3px; }
+.kalk-elwis { margin-top: 3px; font-size: 10.5px; color: #5d6b7a; }
+.kalk-frueher, .kalk-log { margin-top: 6px; font-size: 11px; color: #5d6b7a; }
+.kalk-frueher > summary, .kalk-log > summary { cursor: pointer; font-weight: 600; }
+.kalk-frueher .kalk-ver { margin-left: 8px; }
+.kalk-log ul { margin: 4px 0 0; padding-left: 16px; }
+.kalk-log li { margin: 2px 0; }
+.kalk-log .t { color: #8a96a3; }

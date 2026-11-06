@@ -5,7 +5,7 @@
 
 const C = {
   slate: '#7b8794', orange: '#fdab3d', yellow: '#e8b000', green: '#00c875', dgreen: '#037f4c', purple: '#a25ddc',
-  dark: '#4b5563', red: '#e2445c', blue: '#0086c0', lblue: '#579bfc', teal: '#2fb8b0'
+  dark: '#4b5563', red: '#e2445c', blue: '#0086c0', lblue: '#579bfc', teal: '#2fb8b0', lgreen: '#7cb342'
 };
 
 export const SALES_FIELDS = [
@@ -15,7 +15,8 @@ export const SALES_FIELDS = [
       ['Offen', C.slate, 'Inquiry Status = Open'],
       ['Angefragt (Lieferant)', C.orange, 'neu: Inquiry Status „Angefragt“'],
       ['Angebot schreiben', C.yellow, 'Quote Status = Draft'],
-      ['Kontrolle (Preise)', C.teal, 'neu: Quote Status „In Kontrolle“ – Angebot liegt beim Vorgesetzten, der die Preise macht'],
+      ['Kontrolle (Preise)', C.teal, 'neu: Quote Status „In Kontrolle“ – Kalkulation liegt beim Freigeber, der die Preise macht'],
+      ['Preise freigegeben', C.lgreen, 'neu: Quote Status „Preise freigegeben“ – Kalkulation freigegeben, Preise stehen im Angebot'],
       ['Raus an Kunden', C.green, 'Quote Status = Send to customer'],
       ['In Verhandlung', C.purple, 'neu: Quote Status „In Verhandlung“'],
       ['On Hold', C.dark, 'neu: Inquiry Status „On Hold“'],
@@ -35,7 +36,7 @@ export const SALES_FIELD = Object.fromEntries(SALES_FIELDS.map((f) => [f.key, f]
 // Freitext wie die Monday-Spalte „Kommentar / Übergabe“ (51 von 879 Deals nutzen sie)
 export const SALES_COMMENT = { key: 'comment', label: 'Kommentar / Übergabe', elwis: 'Notiz am Projekt (vorhanden); geht bei der Übergabe als Übergabe-Notiz an den Auftrag' };
 
-export const ACTIVE = ['Offen', 'Angefragt (Lieferant)', 'Angebot schreiben', 'Kontrolle (Preise)', 'Raus an Kunden', 'In Verhandlung'];
+export const ACTIVE = ['Offen', 'Angefragt (Lieferant)', 'Angebot schreiben', 'Kontrolle (Preise)', 'Preise freigegeben', 'Raus an Kunden', 'In Verhandlung'];
 
 export const SALES_PHASES = [
   { key: 'anfragen', label: 'Anfragen', short: 'Anfrage', color: '#579bfc' },
@@ -71,8 +72,10 @@ export const SALES_RULES = [
   { id: 'V3', when: 'Vertriebsstatus → „On Hold“', then: '„On Hold seit“ = heute; Wiedervorlage über „Entscheidung bis“ (leer → heute + 30 Tage); Info an Verkäufer' },
   { id: 'V4', when: 'Vertriebsstatus → „Verloren“', then: 'Verlustgrund wird abgefragt (Pflichtfeld)' },
   { id: 'V5', when: 'Vertriebsstatus → „Übergeben“', then: 'Auftrag (Sales Order) wird angelegt und erscheint in der Auftragsabwicklung' },
-  { id: 'V6', when: 'Vertriebsstatus → „Kontrolle (Preise)“', then: 'Aufgabe „Preise machen“ an den Vorgesetzten (Vorschlag); danach weiter mit „Raus an Kunden“. Fehlt die Kalkulation, zeigt die Vertriebskarte einen Hinweis' },
-  { id: 'V7', when: 'Kalkulation im Kalkulator „an Vertrieb übergeben“', then: 'Staffeln mit Selbstkosten, VK und DB stehen an der Vertriebskarte und im Board (Markierung „kalkuliert“); live als Angebotspositionen am Elwis-Angebot' },
+  { id: 'V6', when: 'Vertriebsstatus → „Kontrolle (Preise)“', then: 'Aufgabe „Preise machen“ an den Freigeber; fehlt die Kalkulation, zeigt die Vertriebskarte einen Hinweis' },
+  { id: 'V7', when: 'Kalkulation „Zur Freigabe senden“ (Teammitglied + Kommentar)', then: 'Vertriebsstatus = Kontrolle (Preise), „Freigabe durch“ = Freigeber, Benachrichtigung an den Freigeber, Eintrag im Protokoll' },
+  { id: 'V8', when: 'Kalkulation „Freigeben“ (Freigeber) oder „Selbst freigeben“ (ohne DB-Schwelle)', then: 'Neue Version (Datum, kalkuliert von, freigegeben von); Vertriebsstatus = Preise freigegeben; Preise als Positionen ins Elwis-Angebot zur PID; Benachrichtigung an den Anforderer' },
+  { id: 'V9', when: 'Kalkulation „Zurückgeben“ (Kommentar Pflicht) oder Anfrage zurückziehen', then: 'Vertriebsstatus = Angebot schreiben, Benachrichtigung mit Kommentar, Eintrag im Protokoll' },
   { id: 'T1', when: 'Täglich: „Entscheidung bis“ überschritten, Status aktiv', then: 'Markierung „überfällig“ + Erinnerung an Verkäufer (Status bleibt erhalten)' },
   { id: 'T2', when: 'Täglich: Wiedervorlage erreicht, Status On Hold', then: 'Vertriebsstatus = Offen (zurück in „Anfragen“) + Info an Verkäufer' }
 ];

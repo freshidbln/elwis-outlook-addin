@@ -5,7 +5,8 @@ import { demoEmails, STAFF } from './mock-data.js';
 import { STATUS_FIELDS, PHASE, computePhase } from './orders.js';
 import { SALES_FIELDS, SALES_PHASE, computeSalesPhase, overdueDays } from './sales.js';
 import { statusChip, showPicker, showTextEditor, closePicker } from './status-ui.js';
-import { kalkFor, kalkUrl, kalkSummary, kalkDate, kalkTable } from './kalk.js';
+import { kalkUrl, staffelSummary, staffelTable, versionHtml, logHtml, zeit } from './kalk.js';
+import * as FG from './freigabe.js';
 
 // Falls office.js nicht geladen werden konnte (z. B. lokale Vorschau ohne Internet)
 if (typeof window.Office === 'undefined') {
@@ -59,8 +60,17 @@ function start(info) {
 function bindUi() {
   $('refreshBtn').addEventListener('click', () => state.inOutlook ? loadFromOutlook() : loadMail(state.mail));
   $('boardBtn').addEventListener('click', openBoard);
-  // Änderungen aus dem Board-Fenster übernehmen (Demo: gemeinsamer Browser-Speicher)
-  window.addEventListener('storage', (e) => { if (e.key && e.key.startsWith('elwis-demo-') && state.ctx) refreshViews(); });
+  $('bellBtn').addEventListener('click', openNachrichten);
+  // Änderungen aus Board und Kalkulator übernehmen (Demo: gemeinsamer Browser-Speicher)
+  window.addEventListener('storage', (e) => { if (e.key && e.key.startsWith('elwis-demo-')) { updateBell(); if (state.ctx) refreshViews(); } });
+  // Demo: als welches Teammitglied wird gearbeitet? Live: das angemeldete Outlook-Postfach.
+  if (provider.isDemo) {
+    const sel = $('ichSelect');
+    sel.innerHTML = FG.TEAM.map((t) => `<option ${t.name === FG.ich() ? 'selected' : ''}>${esc(t.name)}</option>`).join('');
+    sel.addEventListener('change', () => { FG.setIch(sel.value); updateBell(); refreshViews(); toast(`Du arbeitest jetzt als ${sel.value}.`, true); });
+    $('ichBar').hidden = false;
+  }
+  updateBell();
   $('sheetBack').addEventListener('click', closeSheet);
   $('sheetBackdrop').addEventListener('click', closeSheet);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
@@ -449,29 +459,73 @@ function renderDealCard(d) {
   </div>`;
 }
 
-// Kalkulation (OEM-Kalkulator): Ergebnis je Staffel an der Vertriebskarte, Öffnen mit dem Deal
+// ---------- Kalkulation und Freigabe an der Vertriebskarte ----------
+// Regeln: freigabe.js (V7–V9). Der Kalkulator öffnet sich immer als eigenes Fenster.
 function renderKalk(d) {
-  const k = kalkFor(d.id);
-  const hint = d.vstatus === 'Kontrolle (Preise)' && !k ? '<div class="kalk-hint">Für die Preisfreigabe fehlt noch die Kalkulation.</div>' : '';
+  const k = FG.kalkulation(d.id);
+  const a = k?.anfrage; const v = FG.aktuelleVersion(k); const me = FG.ich();
+  const fruehere = (k?.versionen || []).slice(0, -1).reverse();
+  let anfrageHtml = '';
+  if (a) {
+    const fuerMich = a.an === me; const vonMir = a.von === me;
+    anfrageHtml = `<div class="kalk-anfrage${fuerMich ? ' mine' : ''}">
+      <div><b>${fuerMich ? 'Deine Freigabe ist gefragt' : `Freigabe angefordert bei ${esc(a.an)}`}</b> · von ${esc(a.von)}, ${esc(zeit(a.at))}</div>
+      ${a.kommentar ? `<div class="kom">„${esc(a.kommentar)}“</div>` : ''}
+      <div class="kalk-sum">${esc(staffelSummary(a.staffeln))}</div>${staffelTable(a.staffeln, esc)}
+      <div class="kalk-btns">
+        ${fuerMich ? `<button class="btn primary small" data-fg="freigeben|${d.id}">Freigeben</button><button class="btn small" data-fg="zurueck|${d.id}">Zurückgeben</button>` : ''}
+        ${vonMir ? `<button class="btn small" data-fg="zurueckziehen|${d.id}">Anfrage zurückziehen</button>` : ''}
+        <button class="link-btn" data-dc-kalk="${d.id}">${fuerMich ? 'Preise im Kalkulator anpassen ↗' : 'Im Kalkulator ansehen ↗'}</button>
+      </div></div>`;
+  }
+  const last = k?.log?.[k.log.length - 1];
+  const hint = (!a && last?.was === 'Zurückgegeben' ? `<div class="kalk-anfrage mine"><b>Zurückgegeben von ${esc(last.wer)}</b> · ${esc(zeit(last.at))}<div class="kom">„${esc(last.kommentar || '')}“</div></div>` : '')
+    + (d.vstatus === 'Kontrolle (Preise)' && !a ? '<div class="kalk-hint">Status „Kontrolle (Preise)“, aber keine Freigabe-Anfrage – im Kalkulator „Zur Freigabe senden“.</div>' : '');
   return `<div class="dc-kalk">
-    <div class="lbl"><span>Kalkulation${k ? ' · ' + esc(kalkDate(k)) : ''}</span>
-      <button class="link-btn" data-dc-kalk="${d.id}">${k ? 'Öffnen' : 'Kalkulieren'}</button></div>
-    ${k ? `<div class="kalk-sum">${esc(kalkSummary(k))}</div>${kalkTable(k, esc)}${k.korrekturen?.length ? `<div class="kalk-k" title="Korrigierte Fehler der Excel-Vorlage">Abweichend von der Excel-Vorlage (${esc(k.korrekturen.join(', '))})</div>` : ''}` : `<div class="txt empty">Noch nicht kalkuliert</div>`}
-    ${hint}
+    <div class="lbl"><span>Kalkulation${v ? ` · Version ${v.nr}` : ''}</span>
+      <button class="link-btn" data-dc-kalk="${d.id}">${k ? 'Kalkulator öffnen ↗' : 'Kalkulieren ↗'}</button></div>
+    ${anfrageHtml}${hint}
+    ${v ? versionHtml(v, esc, !a) : (a ? '' : '<div class="txt empty">Noch nicht kalkuliert</div>')}
+    ${fruehere.length ? `<details class="kalk-frueher"><summary>Frühere Versionen (${fruehere.length})</summary>${fruehere.map((x) => versionHtml(x, esc)).join('')}</details>` : ''}
+    ${logHtml(k, esc)}
   </div>`;
 }
 
 function openKalk(deal) {
   const url = kalkUrl(deal);
-  // wie das Board: im Outlook-Dialog (gleicher Speicher wie das Add-in), sonst neuer Tab
-  if (state.inOutlook && Office.context.ui?.displayDialogAsync) {
-    Office.context.ui.displayDialogAsync(url, { height: 92, width: 92, promptBeforeOpen: false }, (res) => {
-      if (res.status !== Office.AsyncResultStatus.Succeeded) window.open(url, '_blank');
-      else res.value.addEventHandler(Office.EventType.DialogEventReceived, () => refreshViews());
-    });
-  } else {
-    window.open(url, '_blank');
-  }
+  // eigenes Browserfenster: die Kalkulation braucht Breite. Live kommt der Stand über das Backend zurück;
+  // in der Demo teilen Add-in und Kalkulator den Browser-Speicher nur im selben Browser.
+  if (state.inOutlook && Office.context.ui?.openBrowserWindow) Office.context.ui.openBrowserWindow(url);
+  else window.open(url, '_blank');
+}
+
+function fgAktion(art, dealId, anchor) {
+  const deal = FG.dealById(dealId) || dealSeen[dealId];
+  const run = (fn, ok) => { try { fn(); toast(ok, true); } catch (e) { toast(e.message); } updateBell(); refreshViews(); };
+  if (art === 'freigeben') run(() => FG.freigeben(deal), 'Freigegeben – Version gespeichert, Anforderer benachrichtigt.');
+  if (art === 'zurueckziehen') run(() => FG.zurueckziehen(deal), 'Anfrage zurückgezogen.');
+  if (art === 'zurueck') showTextEditor(anchor, 'Zurückgeben – was soll geändert werden?', '', (txt) => run(() => FG.zurueckgeben(deal, txt), 'Zurückgegeben – Anforderer benachrichtigt.'), { okLabel: 'Zurückgeben', hint: 'Der Kommentar geht an den Anforderer und ins Protokoll.' });
+}
+
+// ---------- Benachrichtigungen ----------
+function updateBell() {
+  const n = FG.ungelesen();
+  $('bellCount').hidden = !n; $('bellCount').textContent = n > 9 ? '9+' : String(n);
+  $('bellBtn').title = n ? `${n} neue Benachrichtigung(en)` : 'Benachrichtigungen';
+}
+function openNachrichten() {
+  const list = FG.nachrichten();
+  openSheet(`Benachrichtigungen · ${FG.ich()}`, list.length ? `<div class="msg-list">${list.map((n) => `
+    <button class="msg${n.gelesen ? '' : ' neu'}" data-msg="${n.id}" data-deal="${esc(n.dealId)}">
+      <span class="msg-t">${esc(zeit(n.at))}</span><span class="msg-x">${esc(n.text)}</span></button>`).join('')}
+    </div><button class="btn small" id="msgAllRead" style="margin-top:8px">Alle als gelesen markieren</button>`
+    : '<div class="empty">Keine Benachrichtigungen.</div>');
+  document.querySelectorAll('[data-msg]').forEach((b) => b.addEventListener('click', () => {
+    FG.gelesen(b.dataset.msg); updateBell();
+    const deal = FG.dealById(b.dataset.deal);
+    if (deal?.projectId) openProject(deal.projectId); else { closeSheet(); openBoard(); }
+  }));
+  $('msgAllRead')?.addEventListener('click', () => { FG.gelesen(); updateBell(); openNachrichten(); });
 }
 
 async function changeDeal(id, key, val) {
@@ -509,6 +563,11 @@ function wireDealTiles(root) {
     e.stopPropagation();
     openKalk(dealSeen[b.dataset.dcKalk]);
   }));
+  root.querySelectorAll('[data-fg]').forEach((b) => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const [art, id] = b.dataset.fg.split('|');
+    fgAktion(art, id, b);
+  }));
   root.querySelectorAll('[data-dc-snooze]').forEach((b) => b.addEventListener('click', async (e) => {
     e.stopPropagation();
     const id = b.dataset.dcSnooze;
@@ -544,7 +603,7 @@ function refreshViews() {
 function openBoard() {
   const fp = state.ctx?.focus?.project;
   const view = fp ? (provider.ordersForProject(fp.id).length ? '&view=orders' : '&view=sales') : '';
-  const url = new URL('board.html?v=1.5.0' + view, location.href).toString();
+  const url = new URL('board.html?v=1.6.0' + view, location.href).toString();
   if (state.inOutlook && Office.context.ui?.displayDialogAsync) {
     Office.context.ui.displayDialogAsync(url, { height: 90, width: 90, promptBeforeOpen: false }, (res) => {
       if (res.status !== Office.AsyncResultStatus.Succeeded) window.open(url, '_blank');

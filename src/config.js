@@ -3,7 +3,7 @@
 //       'live' = Daten über das Backend (siehe /backend), nur lesend in Stufe 1
 export const CONFIG = {
   mode: 'demo',
-  version: '1.5.0',
+  version: '1.6.0',
   elwisBaseUrl: 'https://freshid.elwis.cloud',
   backendUrl: '', // z. B. https://elwis-addin-api.example.net – wird für die Live-Version gesetzt
 

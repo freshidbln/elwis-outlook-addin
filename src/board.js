@@ -5,7 +5,8 @@ import { provider } from './data.js';
 import { STATUS_FIELDS, PHASES, RULES, computePhase } from './orders.js';
 import { SALES_FIELDS, SALES_PHASES, SALES_RULES, SALES_COMMENT, computeSalesPhase, overdueDays } from './sales.js';
 import { statusChip, showPicker, showTextEditor, colorOf, escHtml as esc, fmtDate } from './status-ui.js';
-import { kalkFor, kalkUrl, kalkSummary, kalkDate, kalkReset } from './kalk.js';
+import { kalkUrl, staffelSummary, zeit } from './kalk.js';
+import * as FG from './freigabe.js';
 
 if (typeof window.Office === 'undefined') window.Office = { onReady: (cb) => setTimeout(() => cb({ host: null }), 0) };
 
@@ -31,14 +32,17 @@ const VIEWS = {
     infoCols: [
       { key: 'seller', label: 'Verkäufer', w: 120 }, { key: 'contact', label: 'Kontakt', w: 130 },
       { key: 'company', label: 'Unternehmen', w: 180 }, { key: 'pid', label: 'PID', w: 112 },
-      { key: 'amount', label: 'Wert', w: 100, align: 'right' }, { key: 'received', label: 'Anfrage vom', w: 96, date: true }
+      { key: 'amount', label: 'Wert', w: 100, align: 'right' }, { key: 'received', label: 'Anfrage vom', w: 96, date: true },
+      { key: 'freigabeText', label: 'Kalkulation / Freigabe', w: 170 }
     ],
-    list: () => provider.listDeals(),
+    // Kalkulation/Freigabe aus freigabe.js dazu (live: aus dem Backend)
+    list: async () => (await provider.listDeals()).map((d) => { const k = FG.kalkulation(d.id); return { ...d, freigabeText: FG.statusText(k), freigabeAn: k?.anfrage?.an || '' }; }),
     update: async (id, k, v) => { const r = await provider.updateDeal(id, k, v); return { item: r.deal, applied: r.applied, created: r.createdOrder }; },
     overdue: (d, key) => key === 'entscheidung' && overdueDays(d, todayIso()) > 0,
-    badge: (d) => { const n = overdueDays(d, todayIso()); const k = kalkFor(d.id);
-      return (n ? `<span class="od">überfällig ${n} T</span>` : (d.reactivated ? '<span class="od re">Wiedervorlage</span>' : ''))
-        + (k ? `<button class="kalk-chip" data-kalk="${d.id}" title="${esc(kalkSummary(k) + ' · ' + kalkDate(k))}">kalkuliert</button>` : ''); },
+    badge: (d) => { const n = overdueDays(d, todayIso()); const k = FG.kalkulation(d.id); const v = FG.aktuelleVersion(k);
+      const chip = k?.anfrage ? `<button class="kalk-chip wait${k.anfrage.an === FG.ich() ? ' mine' : ''}" data-kalk="${d.id}" title="${esc(`Freigabe angefordert von ${k.anfrage.von} bei ${k.anfrage.an} · ${zeit(k.anfrage.at)}`)}">${k.anfrage.an === FG.ich() ? 'Freigabe für mich' : 'in Freigabe'}</button>`
+        : v ? `<button class="kalk-chip" data-kalk="${d.id}" title="${esc(staffelSummary(v.staffeln) + ' · ' + zeit(v.at))}">V${v.nr} freigegeben</button>` : '';
+      return (n ? `<span class="od">überfällig ${n} T</span>` : (d.reactivated ? '<span class="od re">Wiedervorlage</span>' : '')) + chip; },
     action: (d) => `<button class="open-btn" data-kalk="${d.id}" title="Kalkulation öffnen">∑</button>`,
     elwisKind: 'inquiry'
   },
@@ -76,10 +80,17 @@ async function init() {
   $('officeFilter').addEventListener('change', render);
   $('rulesBtn').addEventListener('click', toggleRules);
   $('rulesClose').addEventListener('click', toggleRules);
-  $('resetBtn').addEventListener('click', async () => { provider.resetOrders(); kalkReset(); await load(); toast('Demo zurückgesetzt.'); });
+  $('resetBtn').addEventListener('click', async () => { provider.resetOrders(); FG.reset(); await load(); updateBell(); toast('Demo zurückgesetzt.'); });
+  $('mineBtn').addEventListener('click', () => { onlyMine = !onlyMine; $('mineBtn').setAttribute('aria-pressed', String(onlyMine)); render(); });
+  $('bellBtn').addEventListener('click', toggleBell);
+  if (provider.isDemo) {
+    $('ichSelect').innerHTML = FG.TEAM.map((t) => `<option ${t.name === FG.ich() ? 'selected' : ''}>${esc(t.name)}</option>`).join('');
+    $('ichSelect').addEventListener('change', () => { FG.setIch($('ichSelect').value); updateBell(); render(); });
+  } else $('ichSelect').hidden = true;
+  updateBell();
   $('kalkBtn').addEventListener('click', () => window.open(kalkUrl(null), '_blank'));
   document.querySelectorAll('[data-view]').forEach((b) => b.addEventListener('click', () => switchView(b.dataset.view)));
-  window.addEventListener('storage', (e) => { if (e.key && e.key.startsWith('elwis-demo-')) load(); });
+  window.addEventListener('storage', (e) => { if (e.key && e.key.startsWith('elwis-demo-')) { if (e.key === FG.LS_ICH) $('ichSelect').value = FG.ich(); updateBell(); load(); } });
   await switchView(viewKey);
 }
 
@@ -97,7 +108,31 @@ async function switchView(k) {
   render();
 }
 
-async function load() { items = await V().list(); render(); }
+async function load() { items = await V().list(); render(); updateBell(); }
+let onlyMine = false; // Filter „Meine Freigaben“
+
+// ---------- Benachrichtigungen (Glocke) ----------
+function updateBell() {
+  const n = FG.ungelesen();
+  $('bellCount').hidden = !n; $('bellCount').textContent = n > 9 ? '9+' : String(n);
+  const mine = items.filter((o) => o.freigabeAn === FG.ich()).length;
+  $('mineBtn').textContent = `Meine Freigaben${mine ? ` (${mine})` : ''}`;
+  $('mineBtn').hidden = viewKey !== 'sales';
+}
+function toggleBell() {
+  const box = $('bellBox');
+  if (!box.hidden) { box.hidden = true; return; }
+  const list = FG.nachrichten();
+  box.innerHTML = `<div class="bb-head"><b>Benachrichtigungen · ${esc(FG.ich())}</b><button class="link" id="bbAll">alle gelesen</button></div>` +
+    (list.length ? list.slice(0, 30).map((n) => `<button class="bb-item${n.gelesen ? '' : ' neu'}" data-bb="${n.id}" data-deal="${esc(n.dealId)}"><span class="t">${esc(zeit(n.at))}</span>${esc(n.text)}</button>`).join('') : '<div class="bb-empty">Keine Benachrichtigungen.</div>');
+  box.hidden = false;
+  $('bbAll').addEventListener('click', () => { FG.gelesen(); updateBell(); box.hidden = true; });
+  box.querySelectorAll('[data-bb]').forEach((b) => b.addEventListener('click', () => {
+    FG.gelesen(b.dataset.bb); updateBell(); box.hidden = true;
+    if (viewKey !== 'sales') switchView('sales').then(() => flash(b.dataset.deal)); else flash(b.dataset.deal);
+  }));
+}
+function flash(id) { flashId = id; render(); }
 const splitPeople = (s) => String(s || '').split(/\s*,\s*/).filter(Boolean);
 
 function filtered() {
@@ -105,6 +140,7 @@ function filtered() {
   const person = $('personFilter').value;
   const office = $('officeFilter').value;
   return items.filter((o) =>
+    (!onlyMine || viewKey !== 'sales' || o.freigabeAn === FG.ich()) &&
     (!person || splitPeople(o[V().person]).includes(person)) && (!office || o.office === office) &&
     (!q || [o.name, o.company, o.contact, o.sc, o.pid, o.number, o.an, o.comment].join(' ').toLowerCase().includes(q)));
 }

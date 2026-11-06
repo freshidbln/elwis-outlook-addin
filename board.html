@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Übersicht – Elwis</title>
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
-  <link rel="stylesheet" href="src/status-ui.css?v=1.5.0">
-  <link rel="stylesheet" href="src/board.css?v=1.5.0">
+  <link rel="stylesheet" href="src/status-ui.css?v=1.6.0">
+  <link rel="stylesheet" href="src/board.css?v=1.6.0">
 </head>
 <body>
   <header class="bh">
@@ -24,9 +24,16 @@
     </div>
     <select id="personFilter" aria-label="Nach Person filtern"></select>
     <select id="officeFilter" aria-label="Nach Standort filtern"><option value="">NBG + HKG</option><option>NBG</option><option>HKG</option></select>
+    <button id="mineBtn" class="bh-btn" aria-pressed="false" title="Nur Deals, deren Kalkulation auf meine Freigabe wartet">Meine Freigaben</button>
     <button id="kalkBtn" class="bh-btn" title="OEM-Kalkulator öffnen">Kalkulator</button>
     <button id="rulesBtn" class="bh-btn">Regeln &amp; Felder</button>
+    <select id="ichSelect" title="Demo: als welches Teammitglied arbeitest du?" aria-label="Ich bin"></select>
+    <button id="bellBtn" class="bh-btn bell" title="Benachrichtigungen" aria-label="Benachrichtigungen">
+      <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M10 2.5a5 5 0 0 0-5 5v2.69l-1.36 2.72A.75.75 0 0 0 4.31 14h11.38a.75.75 0 0 0 .67-1.09L15 10.19V7.5a5 5 0 0 0-5-5Zm-2.25 13a2.25 2.25 0 0 0 4.5 0h-4.5Z"/></svg>
+      <span id="bellCount" class="bell-count" hidden></span>
+    </button>
     <button id="resetBtn" class="bh-btn ghost" title="Alle Demo-Änderungen verwerfen">Demo zurücksetzen</button>
+    <div id="bellBox" class="bell-box" hidden></div>
   </header>
 
   <main id="board" class="board" aria-live="polite"></main>
@@ -37,6 +44,6 @@
   </aside>
 
   <div id="toast" class="b-toast" hidden role="status"></div>
-  <script type="module" src="src/board.js?v=1.5.0"></script>
+  <script type="module" src="src/board.js?v=1.6.0"></script>
 </body>
 </html>

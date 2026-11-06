@@ -1,19 +1,13 @@
-// Kalkulator (OEM-Kalkulation) – Verbindung zwischen Vertrieb und Kalkulationstool.
-// Der Kalkulator liegt unter kalkulator/ (eigener Build der Browser-App mit dem geprüften Rechenkern „Excel V15“).
-// Er wird aus der Vertriebskarte oder dem Board mit dem Deal geöffnet und übergibt sein Ergebnis je Staffel zurück.
-// Demo: Übergabe über den Browser-Speicher (gleicher Ursprung). Live: Angebotspositionen am Elwis-Angebot.
+// Kalkulator (OEM-Kalkulation) – Darstellung von Kalkulation, Versionen und Protokoll für Vertriebskarte und Board.
+// Die Regeln (Anfordern, Freigeben, Zurückgeben, Versionen, Benachrichtigungen) stehen in freigabe.js.
+// Der Kalkulator liegt unter kalkulator/ (Build der Browser-App mit dem geprüften Rechenkern „Excel V15“) und wird
+// immer als eigenes Fenster geöffnet – für die schmale Outlook-Seitenleiste ist er zu breit.
 
-export const LS_KALK = 'elwis-demo-kalkulationen-v1';
+import { kalkulation, aktuelleVersion, statusText } from './freigabe.js';
 
-export function kalkFor(dealId) {
-  try { return JSON.parse(localStorage.getItem(LS_KALK) || '{}')[dealId] || null; } catch { return null; }
-}
+export { kalkulation, aktuelleVersion, statusText };
 
-export function kalkReset() {
-  try { localStorage.removeItem(LS_KALK); } catch { /* ohne Speicher */ }
-}
-
-/** Adresse des Kalkulators; mit Deal wird der Kalkulator für diesen Deal geöffnet. */
+/** Adresse des Kalkulators; mit Deal wird er für diesen Deal geöffnet. */
 export function kalkUrl(deal) {
   const base = new URL('kalkulator/index.html', location.href).toString();
   if (!deal) return base + '#/calc';
@@ -22,27 +16,40 @@ export function kalkUrl(deal) {
 }
 
 const eur = (v, d = 2) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: d, maximumFractionDigits: d }).format(v);
+const int = (v) => new Intl.NumberFormat('de-DE').format(v);
+export const zeit = (iso) => (iso ? new Date(iso).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : '');
 
-/** Kurzfassung für Karte und Board, z. B. „3 Staffeln · VK 1,85–2,40 € · DB 24–31 %“ */
-export function kalkSummary(k) {
-  if (!k?.staffeln?.length) return '';
-  const vk = k.staffeln.map((s) => s.vkStk);
-  const db = k.staffeln.map((s) => s.dbPct);
+/** Kurzfassung, z. B. „3 Staffeln · VK 1,85–2,40 € · DB 24–31 %“ */
+export function staffelSummary(staffeln) {
+  if (!staffeln?.length) return '';
+  const vk = staffeln.map((s) => s.vkStk); const db = staffeln.map((s) => s.dbPct);
   const range = (a, f) => { const lo = Math.min(...a), hi = Math.max(...a); return lo === hi ? f(lo) : `${f(lo)}–${f(hi)}`; };
-  const n = k.staffeln.length;
+  const n = staffeln.length;
   return `${n} ${n === 1 ? 'Staffel' : 'Staffeln'} · VK ${range(vk, (v) => eur(v).replace(/\s?€$/, ''))} € · DB ${range(db, (v) => Math.round(v))} %`;
 }
 
-export function kalkDate(k) {
-  if (!k?.at) return '';
-  return new Date(k.at).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' });
+/** Staffel-Tabelle */
+export function staffelTable(staffeln, esc) {
+  if (!staffeln?.length) return '';
+  return `<table class="kalk-tbl"><thead><tr><th>Menge</th><th>SK/Stk</th><th>VK/Stk</th><th>DB</th></tr></thead><tbody>${
+    staffeln.map((s) => `<tr title="Versand: ${esc(s.versand || '')}"><td>${int(s.qty)}</td><td>${eur(s.skStk, 3)}</td><td><b>${eur(s.vkStk, 3)}</b></td><td>${Math.round(s.dbPct)} %</td></tr>`).join('')
+  }</tbody></table>`;
 }
 
-/** Staffel-Tabelle für die Vertriebskarte */
-export function kalkTable(k, esc) {
-  if (!k?.staffeln?.length) return '';
-  const int = (v) => new Intl.NumberFormat('de-DE').format(v);
-  return `<table class="kalk-tbl"><thead><tr><th>Menge</th><th>SK/Stk</th><th>VK/Stk</th><th>DB</th></tr></thead><tbody>${
-    k.staffeln.map((s) => `<tr title="Versand: ${esc(s.versand || '')}"><td>${int(s.qty)}</td><td>${eur(s.skStk, 3)}</td><td><b>${eur(s.vkStk, 3)}</b></td><td>${Math.round(s.dbPct)} %</td></tr>`).join('')
-  }</tbody></table>`;
+/** Eine Version als Zeile mit aufklappbaren Staffeln */
+export function versionHtml(v, esc, offen = false) {
+  const wer = v.art === 'selbst' ? `selbst freigegeben von ${v.freigegebenVon}` : `kalkuliert von ${v.kalkuliertVon}, freigegeben von ${v.freigegebenVon}`;
+  return `<details class="kalk-ver"${offen ? ' open' : ''}><summary><b>Version ${v.nr}</b> · ${esc(zeit(v.at))} · ${esc(wer)}${v.preiseAngepasst ? ' · Preise angepasst' : ''}</summary>
+    ${staffelTable(v.staffeln, esc)}
+    <div class="kalk-elwis">${v.elwis?.geschrieben ? 'In Elwis' : 'Elwis (Demo: nicht geschrieben)'}: ${esc(v.elwis?.angebot || '')} – ${v.elwis?.positionen?.length || 0} Position(en)</div>
+    ${v.korrekturen?.length ? `<div class="kalk-k" title="Korrigierte Fehler der Excel-Vorlage">Abweichend von der Excel-Vorlage (${esc(v.korrekturen.join(', '))})</div>` : ''}
+  </details>`;
+}
+
+/** Protokoll (neueste zuerst) */
+export function logHtml(k, esc) {
+  if (!k?.log?.length) return '';
+  return `<details class="kalk-log"><summary>Protokoll (${k.log.length})</summary><ul>${
+    [...k.log].reverse().map((e) => `<li><span class="t">${esc(zeit(e.at))}</span> <b>${esc(e.wer)}</b>: ${esc(e.was)}${e.an ? ` → ${esc(e.an)}` : ''}${e.version ? ` (Version ${e.version})` : ''}${e.kommentar ? ` – „${esc(e.kommentar)}“` : ''}</li>`).join('')
+  }</ul></details>`;
 }

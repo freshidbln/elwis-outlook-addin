@@ -47,27 +47,42 @@ Ein Projekt hat im Add-in immer **genau eine Statuskarte**:
 - **„Übersicht“** (Button oben im Add-in) öffnet `board.html` mit zwei Ansichten im gleichen Look:
   *Anfrage & Vertrieb* → *Auftragsabwicklung*. Gruppen werden aus den Status berechnet,
   Status lassen sich direkt ändern, Summen und Filter (Verkäufer/PM, Standort).
-- **Regeln:** `src/sales.js` (V1–V7, T1–T2, ersetzt 22 Automationen) und `src/orders.js`
+- **Regeln:** `src/sales.js` (V1–V9, T1–T2, ersetzt 22 Automationen) und `src/orders.js`
   (R1–R7, T1–T5, ersetzt 20 Automationen). Live laufen sie als Server-Abläufe in Elwis.
 - **PID als durchgehende Nummer:** Beide Boards und das Add-in führen über die PID (Project ID), von der Anfrage bis zur Rechnung; AN-Nummern entfallen.
 - **Felder:** „Regeln & Felder“ im Board zeigt, was in Elwis schon existiert und was neu anzulegen ist.
 - In der Demo werden Änderungen nur im Browser gespeichert („Demo zurücksetzen“ im Board).
 
-## Kalkulator (OEM-Kalkulation)
+## Kalkulator (OEM-Kalkulation) und Preisfreigabe
 
 Der Kalkulator ersetzt die Excel-Vorlage „Automatic Calculation V15“ und liegt unter `kalkulator/`
-(statischer Build der Browser-App *fresh-id-calculator*).
+(statischer Build aus dem privaten Repo `freshidbln/fresh-id-calculator`, Befehl siehe unten).
 
-- **Aus der Vertriebskarte:** „Kalkulieren“ öffnet den Kalkulator mit Projekt, PID und Kunde.
-  „Ergebnis an Vertrieb übergeben“ schreibt je Staffel Menge, Selbstkosten, VK und DB an den Deal:
-  Die Karte zeigt die Staffeln, das Board markiert den Deal als „kalkuliert“ (Regel V7).
-  Beim nächsten Öffnen wird der gespeicherte Stand geladen. Bei „Kontrolle (Preise)“ ohne Kalkulation erscheint ein Hinweis.
-- **Im Board:** Knopf „Kalkulator“ oben, „∑“ je Deal.
+- **Öffnen:** aus der Vertriebskarte („Kalkulieren ↗“), im Board („∑“ je Deal, Knopf „Kalkulator“).
+  Immer als **eigenes Browserfenster** – für die Seitenleiste ist die Kalkulation zu breit. Der Kalkulator passt sich
+  schmaleren Fenstern an (Spalten untereinander).
+- **Freigabe (Regeln V7–V9, `src/freigabe.js`):**
+  - „Zur Freigabe senden…“: Teammitglied wählen, Kommentar optional → Vertriebsstatus *Kontrolle (Preise)*,
+    Spalte „Kalkulation / Freigabe“ im Board, Benachrichtigung (Glocke) an den Freigeber, Board-Filter „Meine Freigaben“.
+  - Freigeber: in der Seitenleiste „Freigeben“ / „Zurückgeben“ (Kommentar Pflicht) oder im Kalkulator Preise anpassen
+    und freigeben → Benachrichtigung an den Anforderer.
+  - „Selbst freigeben“ – ohne DB-Schwelle (Entscheidung 06.11.2026).
+  - Anforderer kann eine offene Anfrage zurückziehen.
+- **Versionen:** Jede Freigabe ist eine unveränderliche Version (Datum, kalkuliert von, freigegeben von, selbst/Freigabe,
+  Preise angepasst, Staffeln mit SK/VK/DB, Korrekturen gegenüber Excel, Eingaben zum Wiederherstellen).
+  Karte zeigt die aktuelle, ältere aufklappbar; im Kalkulator „Diesen Stand laden“.
+- **Protokoll:** jeder Schritt mit Zeit, Person, Empfänger, Kommentar, Version.
+- **Elwis-Angebot:** Je Version wird angezeigt, was ins Angebot zur PID geschrieben würde (eine Position je Staffel).
+  In der Demo wird Elwis **nicht** verändert. Live: offen – Freigabe zum Schreiben durch Gil Miguel und Klärung der
+  Schnittstelle für Angebotspositionen/Mengenstaffeln mit Softacus.
+- **Demo:** „Ich bin“ wählt das Teammitglied (live: angemeldetes Postfach). Alles liegt im Browser-Speicher
+  (`elwis-demo-kalkulationen-v2`, `elwis-demo-benachrichtigungen-v1`, `elwis-demo-ich`); „Demo zurücksetzen“ leert ihn.
+  Hinweis: In Outlook öffnet der Kalkulator im externen Browser – der teilt den Speicher nicht mit der Seitenleiste;
+  den Ablauf daher im normalen Browser testen (`taskpane.html`, `board.html`). Live läuft der Abgleich über das Backend.
 - **Rechenkern:** zeilengetreue Portierung der Excel-Vorlage, gegen die Vorlage geprüft (33 echte Staffeln,
-  1.360 Zufallsfälle). Rechenfehler der Vorlage sind korrigiert (K1–K13); weicht ein Ergebnis deshalb von Excel ab,
-  zeigt der Kalkulator den Excel-Wert und den Grund.
-- **Live (Stufe 2):** Übergabe als Angebotspositionen am Elwis-Angebot statt im Browser-Speicher.
-- Neu bauen: im Kalkulator-Projekt `npx vite build --config vite.demo.config.ts`, dann `dist-demo/` nach `kalkulator/` kopieren.
+  1.360 Zufallsfälle); Rechenfehler der Vorlage korrigiert (K1–K13), Abweichungen werden mit Excel-Wert angezeigt.
+- **Neu bauen:** im Repo `fresh-id-calculator` `npx vite build --config vite.demo.config.ts`, dann `dist-demo/` hierher
+  nach `kalkulator/` kopieren. Der Kalkulator lädt zur Laufzeit `../src/freigabe.js` dieses Repos.
 
 ## Aufbau
 
@@ -85,7 +100,8 @@ Der Kalkulator ersetzt die Excel-Vorlage „Automatic Calculation V15“ und lie
 | `src/refs.js` | Erkennung von PID-, SC- und Belegnummern im Betreff (alle gelebten Schreibweisen) |
 | `src/status-ui.js`, `src/status-ui.css` | Status-Chips und Auswahl (Add-in und Board) |
 | `board.html`, `src/board.js`, `src/board.css` | Übersicht: Anfrage & Vertrieb, Auftragsabwicklung |
-| `src/kalk.js` | Verbindung Vertrieb ↔ Kalkulator (Öffnen mit Deal, Übergabe der Staffeln) |
+| `src/freigabe.js` | Kalkulations-Freigabe: Anfordern, Freigeben, Zurückgeben, Versionen, Protokoll, Benachrichtigungen, Team |
+| `src/kalk.js` | Darstellung von Kalkulation, Versionen und Protokoll; Adresse des Kalkulators |
 | `kalkulator/` | Kalkulator (Build), Tariftabellen unter `kalkulator/data/` |
 | `backend/` | Vermittlungs-Backend für die Live-Version (nur lesend, noch nicht in Betrieb) |
 
